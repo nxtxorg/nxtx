@@ -1,0 +1,24 @@
+\bib-add('arcadia:github', {
+    author: 'Ramsay Nasser and Tim Gardner'
+    title: 'Arcadia: Clojure in Unity'
+    year: 2017
+    url: 'https://github.com/arcadia-unity/Arcadia'
+})
+\bib-add('casanova-autocompile', {
+    author: 'Mohamed Abbadi'
+    title: 'Casanova MK2'
+    year: 2015
+    url: 'https://github.com/vs-team/casanova-mk2/blob/master/Unity/Casanova%20template%20and%20binaries/Samples/MyFirstSample/Assets/Editor/CasanovaAssetsImporter.cs'
+})
+\bib-add('designing-casanova', {
+    author: 'Ramsay Nasser and Tim Gardner'
+    title: 'Arcadia: Clojure in Unity'
+    year: 2017
+    url: 'https://github.com/arcadia-unity/Arcadia'
+})
+\bib-add('arcadia:github', {
+    author: 'Ramsay Nasser and Tim Gardner'
+    title: 'Arcadia: Clojure in Unity'
+    year: 2017
+    url: 'https://github.com/arcadia-unity/Arcadia'
+})

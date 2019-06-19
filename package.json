@@ -1,0 +1,19 @@
+{
+  "name": "nxtx",
+  "version": "0.1.0",
+  "description": "a browser-friendly LaTex-inspired document preparation system",
+  "main": "index.js",
+  "author": "Malte Rosenbjerg",
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^1.15.6",
+    "rollup-plugin-pegjs": "^2.1.3",
+    "rollup-plugin-terser": "^5.0.0"
+  },
+  "scripts": {
+    "build": "rollup --config rollup.config.js --environment NODE_ENV:production",
+    "dev": "rollup --watch --config rollup.config.js --environment NODE_ENV:development",
+    "editor": "electron ./electron-editor"
+  },
+  "dependencies": {}
+}
