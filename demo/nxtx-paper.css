@@ -1,13 +1,11 @@
 @page { margin: 0 }
 body { margin: 0 }
-.nxtx-root.sheet {
+.sheet {
     margin: 0;
+    overflow: hidden;
     position: relative;
     box-sizing: border-box;
     page-break-after: always;
-}
-.sheet {
-    overflow: hidden;
 }
 
 /** Paper sizes **/
@@ -40,13 +38,13 @@ body { margin: 0 }
 
 /** Fix for Chrome issue #273306 **/
 @media print {
-    .nxtx-root.A3.landscape { width: 420mm }
-    .nxtx-root.A3, .nxtx-root.A4.landscape { width: 297mm }
-    .nxtx-root.A4, .nxtx-root.A5.landscape { width: 210mm }
-    .nxtx-root.A5                    { width: 148mm }
-    .nxtx-root.letter, .legal    { width: 216mm }
-    .nxtx-root.letter.landscape      { width: 280mm }
-    .nxtx-root.legal.landscape       { width: 357mm }
+    .nxtx-root.A3.landscape                 { width: 420mm }
+    .nxtx-root.A3, .nxtx-root.A4.landscape  { width: 297mm }
+    .nxtx-root.A4, .nxtx-root.A5.landscape  { width: 210mm }
+    .nxtx-root.A5                           { width: 148mm }
+    .nxtx-root.letter, .nxtx-root.legal     { width: 216mm }
+    .nxtx-root.letter.landscape             { width: 280mm }
+    .nxtx-root.legal.landscape              { width: 357mm }
 }
 
 @media print { .no-print { display: none } }
