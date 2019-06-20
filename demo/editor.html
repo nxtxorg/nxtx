@@ -157,7 +157,7 @@ The paper helps get a clearer picture of how a game engine can be designed and h
     const schedule = () => {
         if (!renderScheduled) {
             renderScheduled = true;
-            setTimeout(flush, 150);
+            setTimeout(flush, 500);
         }
     };
     const input = () => ++unrenderedInputs && schedule();
