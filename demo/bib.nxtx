@@ -11,14 +11,15 @@
     url: 'https://github.com/vs-team/casanova-mk2/blob/master/Unity/Casanova%20template%20and%20binaries/Samples/MyFirstSample/Assets/Editor/CasanovaAssetsImporter.cs'
 })
 \bib-add('designing-casanova', {
-    author: 'Ramsay Nasser and Tim Gardner'
-    title: 'Arcadia: Clojure in Unity'
-    year: 2017
-    url: 'https://github.com/arcadia-unity/Arcadia'
+    author: 'Maggiore, Giuseppe and Spanò, Alvise and Orsini, Renzo and Costantini, Giulia and Bugliesi, Michele and Abbadi, Mohamed'
+    title: 'Designing Casanova: A Language for Games'
+    year: 2012
+    booktitle: 'Advances in Computer Games'
+    isbn: '978-3-642-31866-5'
 })
-\bib-add('arcadia:github', {
-    author: 'Ramsay Nasser and Tim Gardner'
-    title: 'Arcadia: Clojure in Unity'
-    year: 2017
-    url: 'https://github.com/arcadia-unity/Arcadia'
+\bib-add(voresrapport, {
+    author: 'Malte Rosenbjerg Andersen and Thor Steen Jensen and Thomas Gwynfryn McCollin and Tobias Morell and Daniel van Bolhuis'
+    title: 'An Analysis of Gameplay Programming Languages in Free-To-Use Game Engines'
+    year: 2019
+    url: 'https://projekter.aau.dk/projekter/da/studentthesis/en-analyse-af-spilopfoerselsprogrammeringssprog-i-gratisatbruge-spilmotorer(99442369-1b23-4deb-b99d-060ae5cd5db2).html'
 })

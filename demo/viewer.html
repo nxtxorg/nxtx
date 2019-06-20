@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your nxtx document</title>
+
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css">-->
+    <style>
+        @page { size: A4 }
+        a {
+            color: #1A237E;
+            word-break: break-all;
+            text-decoration: none;
+        }
+        .sheet {
+            padding: 15mm;
+        }
+        .bib-entry {
+            margin-bottom: 5px;
+        }
+        .bib-entry span {
+            margin-right: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="nxtx-paper.css">
+
+    <script src="../dist/parser.js"></script>
+    <script src="../dist/libs/load.js"></script>
+    <script src="../dist/libs/debug-render-time.js"></script>
+</head>
+<body class="A4 nxtx-root">
+<script>
+const text = `
+\\load:package(../dist/libs/styling.js)
+\\load:package(../dist/libs/basic-formatting.js)
+\\load:package(../dist/libs/list-of-contents.js)
+\\load:package(../dist/libs/bibliography.js)
+\\load:package(../dist/libs/acronyms.js)
+
+\\load:document(content)
+`;
+nxtx.render(text, document.body);
+</script>
+</body>
+</html>

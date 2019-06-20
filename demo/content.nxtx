@@ -1,0 +1,45 @@
+
+\title(NxTx Demo)
+\set-google-font-family('Merriweather', 'mono')
+\load:document(bib.nxtx)
+\define-ac(API, 'Application Programming Interface')
+\define-ac(JIT, 'Just in Time')
+\define-ac(STM, 'Software Transactional Memory')
+
+\chapter(Unity)
+\label(fsharp-unity-development)
+
+\section(Unity Extension)
+As mentioned in \Ref(fsharp-unity-development), it was noticed that the participants had problems remembering to press compile in F# in the Unity editor. A solution to this could be automatically detecting if the F# files have been changed when focusing the Unity editor. If any changes are detected, the compiler could be invoked. A problem with this is that the hooks in the Unity \ac(API) only allows for reacting to changes to files in the \text:tt(Assets)-folder.
+An alternative to detecting the file changes when the Unity editor is focused, is detecting the changes when the developers enters play-mode. This is also available to hook onto using the Unity \ac(API) and does not require the files to be placed in the \text:it(Assets)-folder.
+
+\section(Benchmarking the Old .NET Framework Runtime)\label(sec:macrobench)
+It would be interesting to see how the old Windows-only .NET Framework runtime performs compared to \text:tt(mono) and the new, cross-platform \text:tt(dotnet) runtime. A result that could be interesting to see is whether \text:tt(mono) is slower than the old, windows-only .NET runtime. If it is, then it seems counter-intuitive to base the game engine's scripting runtime on it, though this was most likely because of \text:tt(mono) being cross-platform and open-source, which the old .NET runtime was not. The new \text:tt(dotnet) runtime is both cross-platform and open-source, released under MIT license.
+
+\section(Investigation on Start-Up Time)\label(sec:futurework-startup-time)
+As explained in \ref(sec:macrobench), the macrobenchmark suffered under an extensive startup time. Why exactly this is so extensive would be an interesting find, beyond the guess that it is just \ac(JIT) warm-up. Especially so since the startup is slower in C# than it is in F#. One way to approach this would be to utilise Unity's Profiler tool, shown in \ref(fig:unity-profiler).
+
+\chapter(More Unity)
+
+\section(Language Support in Unity)
+
+There have been several projects which aimed to add another language as the gameplay programming language to Unity, such as Arcadia and Casanova \cite(arcadia:github, casanova-autocompile).\break
+
+These two projects have two different approaches to adding a new gameplay language.\break
+
+Casanova is both declarative and procedural language, for writing gameplay code for Unity games \cite(designing-casanova). It is transpiled to C# for use with Unity, but one of the goals of the language is to have F# as a compile target \cite(casanova-autocompile, casanova-specs). Casanova is a much more high level language than most of the other gameplay languages used in free-to-play game engines. The language describes entities and the rules these entities follow.\break
+
+Arcadia adds Clojure support to Unity via Clojure CLR: \dquote(a native implementation of Clojure on the Common Language Runtime)\footnote(https://clojure.org/about/clojureclr). Clojure is integrated as an interpreted language on top of Unity. This means the code can be modified while a game is running in the Unityeditor. It is mostly functional (and side-effect free), but has some specific functions that affect the state of the game.\break
+
+One of the nice features of Clojure is \ac(STM), which is a way of handling concurrency. It is inspired from database transactions and a variant of transactional memory.
+While there is no official page that states Clojure CLR has support for \ac(STM) there is some evidence, such as the \ac(STM) tests on their github page\footnote(https://github.com/clojure/clojure-clr/blob/master/Clojure/Clojure.Source/clojure/samples/stm/). Arcadia and \ac(STM) were explored in a previous report, and the find was that \ac(STM) was not the go-to method of managing memory in Unity \cite(voresrapport).
+
+
+\section(Game development tools)
+In the academic, there has been made a few game engines.
+One of those are JOT, JOT is a specialised modular multipurpose massively multiplayer online game engine \cite(amador2014jot).
+JOT had a interesting and academic approach of making a paper that specified a design and a architecture for the game engine.
+JOT was implemented in Java, due to Java's multiplatform abilities and the available third party applications and libraries.
+The paper helps get a clearer picture of how a game engine can be designed and how a architecture can look.
+
+\bib-print
