@@ -30,17 +30,17 @@
         textarea {
             padding: 5px;
             width: calc(100% - 12px);
-            height: 100%;
+            min-height: 100%;
             display: inline-block;
             overflow-y: scroll;
         }
         .textarea {
-            margin: 20px;
+            margin: 20px 30px;
             flex: 45%;
         }
         .flex {
             display: flex;
-            height: 100%;
+            min-height: 100%;
         }
         .root {
             flex: 55%;
@@ -65,9 +65,9 @@
 <body>
 
 <div class="flex">
-    <div class="textarea">
+    <div class="textarea no-print">
         <div id="errorlabel"></div>
-        <textarea class="no-print" id="code">
+        <textarea id="code">
 \load:package(../dist/libs/styling.js)
 \load:package(../dist/libs/basic-formatting.js)
 \load:package(../dist/libs/list-of-contents.js)
@@ -121,10 +121,7 @@ The paper helps get a clearer picture of how a game engine can be designed and h
 </textarea>
     </div>
     <div class="root">
-        <div style="height: 100%; width: 100%;">
-            <span id="paper" class="A4 nxtx-root"></span>
-            &nbsp;
-        </div>
+        <span id="paper" class="A4 nxtx-root"></span>
     </div>
 </div>
 
@@ -142,8 +139,8 @@ The paper helps get a clearer picture of how a game engine can be designed and h
             await nxtx.render(codeValue, paper);
             error.innerText = '';
         } catch (e) {
-            console.log(e);
-            error.innerText = `Syntax error at line ${e.location.start.line} column ${e.location.start.column}:\n${e.message}`;
+            console.error(e);
+            if (error.location) error.innerText = `Syntax error at line ${e.location.start.line} column ${e.location.start.column}:\n${e.message}`;
         }
     };
 
