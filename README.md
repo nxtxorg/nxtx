@@ -16,9 +16,25 @@ A NxTx document consists of a number of paragraphs separated by an empty line.
 Each paragraph consists of a number of text-blocks and commands:
 ```
 Hello, this is a \text:bf(demo). 
+Why
 ```
-which should render to this:
 
-Hello, this is a **demo**. 
+### Commands
+Commands in NxTx always start with a single backspace and a name. 
+A command can be invoked with zero or more arguments, with the arguments enclosed in parentheses:
 
-On a 
+```
+\command
+\command(test)
+\command('test1', 2019)
+```
+A command argument can be of several types:
+- Command (eg. `\highlight('const a = new Date()')`)
+- Command name (eg. `highlight`)
+- String (enclosed with either `'` or `"`)
+- Integer
+- Float
+- Dictionary
+
+The syntax for a `dictionary`:
+````
