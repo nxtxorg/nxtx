@@ -1,16 +1,16 @@
-\bib-add('arcadia:github', {
+\bib-add(arcadia:github, {
     author: 'Ramsay Nasser and Tim Gardner'
     title: 'Arcadia: Clojure in Unity'
     year: 2017
     url: 'https://github.com/arcadia-unity/Arcadia'
 })
-\bib-add('casanova-autocompile', {
+\bib-add(casanova-autocompile, {
     author: 'Mohamed Abbadi'
     title: 'Casanova MK2'
     year: 2015
     url: 'https://github.com/vs-team/casanova-mk2/blob/master/Unity/Casanova%20template%20and%20binaries/Samples/MyFirstSample/Assets/Editor/CasanovaAssetsImporter.cs'
 })
-\bib-add('designing-casanova', {
+\bib-add(designing-casanova, {
     author: 'Maggiore, Giuseppe and Spanò, Alvise and Orsini, Renzo and Costantini, Giulia and Bugliesi, Michele and Abbadi, Mohamed'
     title: 'Designing Casanova: A Language for Games'
     year: 2012
