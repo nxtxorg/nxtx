@@ -23,7 +23,8 @@ nxtx.registerCommand('cite', async (...args) => {
             cited.push(arg.value);
             index = cited.length - 1;
         }
-        const e = nxtx.htmlLite('a', { href: `#---${arg.value}`, innerText: index + 1 });
+        const e = nxtx.htmlLite('a', { href: `#---${arg.value}`});
+        e.innerText = index + 1;
         return [ e, ', ' ];
     });
     cites.length -= 1;

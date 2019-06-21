@@ -1,6 +1,6 @@
-nxtx.registerCommand('text:it', content => nxtx.htmlLite('i', { innerText: content.value }));
-nxtx.registerCommand('text:bf', content => nxtx.htmlLite('b', { innerText: content.value }));
-nxtx.registerCommand('text:tt', content => nxtx.htmlLite('code', { innerText: content.value }));
+nxtx.registerCommand('text:it', content => nxtx.html('i', null, content.value));
+nxtx.registerCommand('text:bf', content => nxtx.html('b', null, content.value));
+nxtx.registerCommand('text:tt', content => nxtx.html('code', null, content.value));
 
 nxtx.registerCommand('dquote', contentNode => `“${contentNode.value}”`);
 nxtx.registerCommand('break', () => nxtx.htmlLite('div', { style: 'height: 1.5em' }));

@@ -11,18 +11,18 @@ const plugins = dev ? [
 
 export default [
     { name: 'parser', format: 'umd', plugins: [ pegjs({ optimize: 'speed' }), ...plugins ] },
-    { name: 'libs/acronyms', format: 'iife', plugins },
-    { name: 'libs/basic-formatting', format: 'iife', plugins },
-    { name: 'libs/bibliography', format: 'iife', plugins },
-    { name: 'libs/debug-render-time', format: 'iife', plugins },
-    { name: 'libs/list-of-contents', format: 'iife', plugins },
-    { name: 'libs/loading', format: 'iife', plugins },
-    { name: 'libs/styling', format: 'iife', plugins },
+    { name: 'packages/acronyms', format: 'iife', plugins },
+    { name: 'packages/basic-formatting', format: 'iife', plugins },
+    { name: 'packages/bibliography', format: 'iife', plugins },
+    { name: 'packages/debug-render-time', format: 'iife', plugins },
+    { name: 'packages/list-of-contents', format: 'iife', plugins },
+    { name: 'packages/loading', format: 'iife', plugins },
+    { name: 'packages/styling', format: 'iife', plugins },
 ].map(entry => ({
     input: `src/${entry.name}.js`,
     output: {
         name: 'nxtx',
-        file: `dist/${entry.name}.js`,
+        file: `docs/demo/${entry.name}.js`,
         format: entry.format,
         sourcemap: true
     },
