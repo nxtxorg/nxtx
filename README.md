@@ -1,4 +1,4 @@
-# NxTx (working name)
+# NxTx
 _a browser-friendly [LaTex]()-inspired document preparation system_
 
 <br/>
