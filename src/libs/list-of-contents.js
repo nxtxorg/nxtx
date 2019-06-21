@@ -13,7 +13,7 @@ const registerPart = (type, element) => {
         numbering[type] += 1;
         resetChildren(type);
         parts.push({ type, title: content.value, numbering: { ...numbering } });
-        return nxtx.html(element, null, content.value);
+        return nxtx.htmlLite(element, { innerText: content.value });
     });
 };
 
@@ -25,7 +25,7 @@ const registerPart = (type, element) => {
 
 nxtx.registerCommand('label', ref => {
     refs[ref.value] = parts.length && parts[parts.length - 1];
-    return nxtx.html('span', {id: '--' + ref.value, 'data-label': ref.value});
+    return nxtx.htmlLite('span', {id: '--' + ref.value, 'data-label': ref.value});
 });
 
 const resetChildren = type => {
@@ -41,7 +41,7 @@ const formatPart = (ref, capitalize) => {
     const part = refs[ref];
     if (!part) {
         console.warn(`Label '${ref}' has not been referenced`);
-        return nxtx.html('b', { class: "warning" }, `${ref}`);
+        return nxtx.htmlLite('b', { class: "warning", innerText: ref });
     }
     let result = '';
     switch (part.type) {
@@ -58,10 +58,10 @@ const formatPart = (ref, capitalize) => {
     return capitalize ? capitalizeStr(result) : result;
 };
 nxtx.registerCommand('ref', ref => {
-    return nxtx.html('a', {href: `#--${ref.value}`, 'data-ref': ref.value}, formatPart(ref.value, false));
+    return nxtx.htmlLite('a', {href: `#--${ref.value}`, 'data-ref': ref.value, innerText: formatPart(ref.value, false) });
 });
 nxtx.registerCommand('Ref', ref => {
-    return nxtx.html('a', {href: `#--${ref.value}`, 'data-ref': ref.value}, formatPart(ref.value, true));
+    return nxtx.htmlLite('a', {href: `#--${ref.value}`, 'data-ref': ref.value, innerText: formatPart(ref.value, true) });
 });
 
 nxtx.on('postrender', () => {
