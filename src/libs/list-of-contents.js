@@ -1,12 +1,14 @@
 /*  List of contents; Chapter, section etc. package for nxtx
     License: MIT */
 
+let baseNumbering = {};
 let numbering = {};
 let parts = [];
 let refs = {};
 
 const registerPart = (type, element) => {
-    numbering[type] = 0;
+    baseNumbering[type] = 0;
+    numbering = { ...baseNumbering };
     nxtx.registerCommand(type, content => {
         numbering[type] += 1;
         resetChildren(type);
@@ -63,7 +65,7 @@ nxtx.registerCommand('Ref', ref => {
 });
 
 nxtx.on('postrender', () => {
-    numbering = {};
+    numbering = { ...baseNumbering };
     parts = [];
     refs = {};
 });

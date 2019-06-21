@@ -3,7 +3,7 @@
     - basic-formatting (newpage)
     License: MIT */
 
-const acronyms = {};
+let acronyms = {};
 let usedAcronyms = [];
 
 nxtx.registerCommand('define-ac', (acronym, full) => {
@@ -18,7 +18,10 @@ nxtx.registerCommand('ac', acronym => {
     if (usedAcronyms.includes(acronym.value))
         return acronym.value;
     usedAcronyms.push(acronym.value);
-    return full;
+    return `${full} (${acronym.value})`;
 });
 
-nxtx.on('prerender', () => usedAcronyms = []);
+nxtx.on('postrender', () => {
+    acronyms = {};
+    usedAcronyms = [];
+});

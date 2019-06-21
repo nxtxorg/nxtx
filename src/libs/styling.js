@@ -2,6 +2,7 @@
     License: MIT */
 
 const style = document.createElement("style");
+style.id = 'styling-style-block';
 document.head.appendChild(style);
 
 nxtx.registerCommand('add-css-rule', (rule, index = 1) => {
