@@ -9,8 +9,10 @@ nxtx.registerCommand('load:document', async nameNode => {
     const filename = (name.substr(name.length - 5).toLowerCase() !== '.nxtx') ? `${name}.nxtx` : name;
     const response = await fetch(filename);
     if (!response.ok) return console.error(`NxTx document ${filename} not found`);
+
     const lastModified = response.headers.get('last-modified');
-    if (loaded.documents[filename] && loaded.documents[filename].lastModified === lastModified) {
+    const cached = loaded.documents[filename];
+    if (lastModified && cached && cached.lastModified === lastModified) {
         console.log('using cached', filename);
         return loaded.documents[filename].nodes;
     }
