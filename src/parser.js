@@ -13,11 +13,16 @@ export const registerCommand = (cmd, fn, overwrite) => {
     commands[cmd] = fn;
 };
 
+const noMerge = { '.': true, ',': true };
 const mergeText = pNode => {
     const textNodes = [];
     const mergedNodes = pNode.value.reduce((acc, node) => {
         if (node.type === 'text') {
-            textNodes.push(node);
+            if (noMerge[node.value[0]]) {
+                acc.push({ type: 'text', value: node.value[0] + ' ' });
+                if (node.value.length !== 1) textNodes.push({ type: 'text', value: node.value.substr(1) });
+            }
+            else textNodes.push(node);
         } else {
             if (textNodes.length) {
                 acc.push({ type: 'text', value: textNodes.map(n => n.value).join(' ') });
@@ -36,6 +41,8 @@ export const parse = text => parser.parse(text).map(mergeText);
 
 const truthy = e => !!e;
 
+const asyncFlatMap = async (elements, fn) => (await Promise.all(elements.map(fn))).flat();
+
 const baseRenderNode = async node => {
     if (node.split) return document.createTextNode(node);
     if (!node.type) return node;
@@ -43,32 +50,33 @@ const baseRenderNode = async node => {
         case 'node':
             return node;
         case 'block':
-            const bNodes = await Promise.all(node.value.map(baseRenderNode));
-            return bNodes.flat();
+            return await asyncFlatMap(node.value, baseRenderNode);
         case 'paragraph':
-            const pNodes = await Promise.all(node.value.map(baseRenderNode));
-            return pNodes.flat();
+            const pNodes = await asyncFlatMap(node.value, baseRenderNode);
+            if (pNodes.length) pNodes.push(htmlLite('div', { class: 'paragraph-break' }));
+            return pNodes;
         case 'html':
-            return html1('span', { innerHTML: node.value });
+            return htmlLite('span', { innerHTML: node.value });
         case 'text':
             return document.createTextNode(node.value);
         case 'command':
-            const result = [ await executeCommand(node.name, node.args) ];
-            const renderedResult = await Promise.all(result.flat().filter(truthy).map(baseRenderNode));
-            return renderedResult.flat();
+            const result = [ await executeCommand(node.name, node.args) ].flat().filter(truthy);
+            return await asyncFlatMap(result, baseRenderNode);
     }
+    console.error(node);
 };
 
 export const render = async (text, root) => {
+    while (root.firstChild) root.removeChild(root.firstChild);
     trigger('prerender');
     let page = 0, currentPage;
-    const newPage = () => root.appendChild(currentPage = html1('section', { class: 'sheet', 'data-page': ++page }));
+    const newPage = () => root.appendChild(currentPage = htmlLite('section', { id: `page-${++page}`, class: 'sheet', 'data-page': page }));
     newPage();
     const place = node => {
-        currentPage.append(node);
+        currentPage.appendChild(node);
         if (currentPage.scrollHeight > currentPage.clientHeight) {
             newPage();
-            currentPage.append(node);
+            currentPage.appendChild(node);
         }
     };
     const paragraphs = parse(text);
@@ -78,13 +86,13 @@ export const render = async (text, root) => {
     }
     trigger('postrender');
 };
-const html1 = (nodeName, attributes) => {
+export const htmlLite = (nodeName, attributes) => {
     let n = document.createElement(nodeName);
     Object.keys(attributes || {}).forEach(k => n.setAttribute(k, attributes[k]));
     return n;
 };
 export const html = async (nodeName, attributes, ...children) => {
-    const n = html1(nodeName, attributes);
+    const n = htmlLite(nodeName, attributes);
     for (let i = 0; i < children.length; i++) n.appendChild(await baseRenderNode(children[i]));
     return n;
 };
