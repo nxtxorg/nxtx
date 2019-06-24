@@ -1,17 +1,33 @@
+/*  NxTx parser and renderer
+    Author: Malte Rosenbjerg
+    License: MIT */
+
 import parser from '../grammar.pegjs';
 
 const commands = {};
+const preprocessors = {};
 const executeCommand = async (cmd, args) => {
     if (commands[cmd] !== undefined)
-        return await commands[cmd](...args);
+        return await commands[cmd](...(await Promise.all(args.map(arg => arg.type === 'command' ? executeCommand(arg.name, arg.args) : arg))));
     console.warn(`Command '${cmd}' not registered`);
     return await html('b', {class: "error"}, `${cmd}?`);
 };
-export const registerCommand = (cmd, fn, overwrite) => {
-    if (!overwrite && commands[cmd] !== undefined)
+
+const register = cmdCollection => (cmd, fn, overwrite = false) => {
+    if (!overwrite && cmdCollection[cmd] !== undefined)
         return console.warn(`Command '${cmd}' is already registered. Set overwrite to true, if you need to overwrite the already registered command.`);
-    commands[cmd] = fn;
+    cmdCollection[cmd] = fn;
 };
+export const registerCommand = register(commands);
+export const registerPreprocessor = register(preprocessors);
+
+export const verifyTypes = (types, ...args) => {
+    const invalidTypes = args
+        .map((actual, index) => ({expected: types[index], actual, index}))
+        .filter(type => type.expected !== type.actual);
+    return { ok: invalidTypes.length === 0, invalid: invalidTypes }
+};
+export const parse = text => parser.parse(text).map(mergeText);
 
 const noMerge = { '.': true, ',': true };
 const mergeText = pNode => {
@@ -37,10 +53,8 @@ const mergeText = pNode => {
     return { type: pNode.type, value: mergedNodes };
 };
 
-export const parse = text => parser.parse(text).map(mergeText);
 
 const truthy = e => !!e;
-
 const asyncFlatMap = async (elements, fn) => (await Promise.all(elements.map(fn))).flat();
 
 const baseRenderNode = async node => {
@@ -66,11 +80,27 @@ const baseRenderNode = async node => {
     console.error(node);
 };
 
+const executePreprocessors = async paragraphs => {
+    for (let i = 0; i < paragraphs.length; i++) {
+        const paragraph = paragraphs[i];
+        const processed = await asyncFlatMap(paragraph.value, async node => {
+            if (node.type === 'command' && preprocessors[node.name]) {
+                await preprocessors[node.name](...node.args);
+                if (commands[node.name] === undefined) return;
+            }
+            return node;
+        });
+        paragraph.value = processed.filter(truthy);
+    }
+};
+
 export const render = async (text, root) => {
     while (root.firstChild) root.removeChild(root.firstChild);
-    trigger('prerender');
     let page = 0, currentPage;
-    const newPage = () => root.appendChild(currentPage = htmlLite('section', { id: `page-${++page}`, class: 'sheet', 'data-page': page }));
+    const newPage = () => {
+        root.appendChild(currentPage = htmlLite('section', { id: `page-${++page}`, class: 'sheet', 'data-page': page }));
+        currentPage.appendChild(htmlLite('div', { class: 'meta page-start' }));
+    };
     newPage();
     const place = node => {
         currentPage.appendChild(node);
@@ -79,7 +109,9 @@ export const render = async (text, root) => {
             currentPage.appendChild(node);
         }
     };
+    trigger('prerender');
     const paragraphs = parse(text);
+    await executePreprocessors(paragraphs);
     for (let i = 0; i < paragraphs.length; i++) {
         const children = await baseRenderNode(paragraphs[i]);
         children.forEach(place);
@@ -97,10 +129,7 @@ export const html = async (nodeName, attributes, ...children) => {
     return n;
 };
 
-const hooks = {
-    prerender: [],
-    postrender: []
-};
+const hooks = { prerender: [], postrender: [] };
 const trigger = event => (hooks[event] || []).forEach(fn => fn());
 export const on = (event, handler) => {
     if (!hooks[event].includes(handler)) hooks[event].push(handler);
