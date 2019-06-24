@@ -1,3 +1,6 @@
+/*  Package printing rendering time for diagnostics
+    Author: Malte Rosenbjerg
+    License: MIT */
 
 let started;
 nxtx.on('prerender', () => started = Date.now());
