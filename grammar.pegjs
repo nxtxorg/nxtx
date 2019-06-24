@@ -12,25 +12,29 @@ Text 'text'	= text:TextContent+  { return { type: 'text', value: text.join('') }
 TextContent 'text' = '\\\\' { return '\\' } / [^\r\n\\]+ { return text() }
 
 Command 'command' = '\\' name:CommandName args:CommandArguments? { return { type: 'command', name, args: args || [] } }
-CommandName 'command name'
-	= [a-zA-Z] CommandName { return text() }
-	/ [a-zA-Z] [a-zA-Z0-9_:-] CommandName { return text() }
-	/ [a-zA-Z] { return text() }
-	/ [a-zA-Z] [0-9] { return text() }
-CommandArguments
-	= '(' _ args:CommandArgumentChain _ ')' { return args }
-	/ '(' args:[^)]+ ')' { return [ { type: 'string', value: args.join('') }] }
-CommandArgumentChain 'command arguments'
-	= head:Value _ ',' _ tail:CommandArgumentChain { return [head, ...tail] }
-	/ head:Value { return [head] }
 
-Value = Name / Command / Dictionary / Float / Integer / String
+CommandName 'command name'
+	= CommandChars CommandName { return text() }
+	/ CommandChars [_:-] CommandName { return text() }
+	/ CommandChars { return text() }
+CommandChars = [a-zA-Z!#-&*-+--/;-@] [0-9]?
+CommandArguments
+	= '(' _ args:ValueChain _ ')' { return args }
+	/ '(' args:[^)]+ ')' { return [ { type: 'string', value: args.join('') }] }
+
+ValueChain 'command arguments'
+	= head:Value _ ',' _ NEWLINE? _ tail:ValueChain { return [head, ...tail] }
+	/ head:Value { return [head] }
+Value = Dictionary / Array / Command / Name / Number / String
+
 Name 'name' = name:CommandName { return { type: 'string', value: name } }
-Float 'float' = [0-9]+ '.' [0-9]+ { return { type: 'float', value: parseFloat(text()) } }
-Integer 'integer' = [0-9]+ { return { type: 'int', value: parseInt(text(), 10) } }
+Number 'number' = [0-9]+ float:('.' [0-9]+)? { return { type: 'number', value: (float ? parseFloat(text()) : parseInt(text(), 10)) } }
 String 'string'
 	= '"' text:[^"]* '"' { return { type: 'string', value: text.join('') } }
 	/ "'" text:[^']* "'" { return { type: 'string', value: text.join('') } }
+Array 'array'
+	= '[' _ NEWLINE? _ chain:ValueChain _ NEWLINE? _ ']' { return { type: 'array', value: chain } }
+    / '[' _ ']' { return { type: 'array', value: [] } }
 
 Dictionary 'dictionary'
 	= '{' _ NEWLINE? _ pairs:KeyValuePairs _ NEWLINE? _ '}' { return { type: 'dictionary', value: pairs.reduce((acc, e) => (acc[e.name] = e.value) && acc, {}) } }
