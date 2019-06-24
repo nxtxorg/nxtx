@@ -4,6 +4,7 @@
     /*  Bibliography package for nxtx
         requires:
         - basic-formatting (newpage)
+        Author: Malte Rosenbjerg
         License: MIT */
 
     const entries = {};
@@ -65,13 +66,17 @@
                     .map(k => entryFieldFormatting[k](entryFields[k]))
         ));
         return [
-            { type: 'command', name: 'newpage', args: [] },
+            { type: 'command', name: 'pagebreak', args: [] },
             nxtx.html('h2', { class: 'bibliography' }, 'Bibliography'),
             ...mapped
         ];
     });
 
     nxtx.on('prerender', () => cited = []);
+
+    // Default
+    style.sheet.insertRule('.bib-entry { margin-bottom: 5px }', 0);
+    style.sheet.insertRule(`.bib-entry span { margin-right: 5px }`, 1);
 
 }());
 //# sourceMappingURL=bibliography.js.map

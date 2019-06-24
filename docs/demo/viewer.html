@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Your nxtx document</title>
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css">-->
     <style>
         @page { size: A4 }
         a {
@@ -11,27 +10,16 @@
             word-break: break-all;
             text-decoration: none;
         }
-        .sheet {
-            padding: 15mm;
-        }
-        .bib-entry {
-            margin-bottom: 5px;
-        }
-        .bib-entry span {
-            margin-right: 5px;
-        }
     </style>
     <link rel="stylesheet" href="nxtx-paper.css">
 
     <script src="parser.js"></script>
-    <script src="packages/loading.js"></script>
+    <script src="packages/core.js"></script>
     <script src="packages/debug-render-time.js"></script>
 </head>
 <body class="A4 nxtx-root">
 <script>
 const text = `
-\\load:package(packages/styling.js)
-\\load:package(packages/basic-formatting.js)
 \\load:package(packages/list-of-contents.js)
 \\load:package(packages/bibliography.js)
 \\load:package(packages/acronyms.js)
@@ -41,9 +29,11 @@ const text = `
 \\load:document(bibliography)
 \\load:document(acronyms)
 
+\\loc-print
 \\load:document(content)
 
 \\bib-print
+
 `;
 nxtx.render(text, document.body).then(() => {
     console.log(document.body.outerHTML);

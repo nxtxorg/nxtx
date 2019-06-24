@@ -1,3 +1,7 @@
+/*  Styling based on paper-css by cognitom (https://github.com/cognitom/paper-css)
+    With modications necessary for NxTx
+    License: MIT */
+
 @page { margin: 0 }
 body { margin: 0 }
 .sheet {

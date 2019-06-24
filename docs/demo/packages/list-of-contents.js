@@ -2,6 +2,7 @@
     'use strict';
 
     /*  List of contents; Chapter, section etc. package for nxtx
+        Author: Malte Rosenbjerg
         License: MIT */
 
     let baseNumbering = {};
@@ -9,29 +10,36 @@
     let parts = [];
     let refs = {};
 
+    const style = document.createElement("style");
+    style.id = 'basic-formatting-style-block';
+    document.head.appendChild(style);
+
     const registerPart = (type, element) => {
         baseNumbering[type] = 0;
         numbering = { ...baseNumbering };
-        nxtx.registerCommand(type, content => {
+        nxtx.registerPreprocessor(type, content => {
             numbering[type] += 1;
-            resetChildren(type);
+            resetChildrenNumbering(type);
             parts.push({ type, title: content.value, numbering: { ...numbering } });
-            return nxtx.html(element, null, content.value);
         });
+        nxtx.registerCommand(type, content => nxtx.html(element, null, content.value));
     };
 
     [   // Ordering matters
         ['chapter', 'h1'],
         ['section', 'h3'],
         ['subsection', 'h4'],
-    ].map(arr => registerPart(...arr));
+    ].forEach(arr => registerPart(...arr));
 
+    nxtx.registerPreprocessor('label', ref => {
+        if (refs[ref.value] !== undefined) console.warn(`Attempt to redefine label '${ref.value}' ignored`);
+        else refs[ref.value] = parts.length && parts[parts.length - 1];
+    });
     nxtx.registerCommand('label', ref => {
-        refs[ref.value] = parts.length && parts[parts.length - 1];
         return nxtx.html('span', {id: '--' + ref.value, 'data-label': ref.value});
     });
 
-    const resetChildren = type => {
+    const resetChildrenNumbering = type => {
         const types = Object.keys(numbering);
         let reset = false;
         for (let i = 0; i < types.length; i++) {
@@ -40,7 +48,8 @@
         }
     };
     const capitalizeStr = str => str[0].toUpperCase() + str.substr(1);
-    const formatPart = (ref, capitalize) => {
+    const formatNumbering = numbering => Object.keys(numbering).map(k => numbering[k]).join('.').replace(/[.0]+$/, '');
+    const formatRef = (ref, capitalize) => {
         const part = refs[ref];
         if (!part) {
             console.warn(`Label '${ref}' has not been referenced`);
@@ -49,22 +58,32 @@
         let result = '';
         switch (part.type) {
             case 'chapter':
-                result = `chapter ${part.numbering.chapter}`;
+                result = `chapter ${formatNumbering(part.numbering)}`;
                 break;
             case 'section':
-                result = `section ${part.numbering.chapter}.${part.numbering.section}`;
+                result = `section ${formatNumbering(part.numbering)}`;
                 break;
             case 'subsection':
-                result = `section ${part.numbering.chapter}.${part.numbering.section}.${part.numbering.subsection}`;
+                result = `section ${formatNumbering(part.numbering)}`;
                 break;
         }
         return capitalize ? capitalizeStr(result) : result;
     };
     nxtx.registerCommand('ref', ref => {
-        return nxtx.html('a', {href: `#--${ref.value}`, 'data-ref': ref.value}, formatPart(ref.value, false));
+        return nxtx.html('a', {href: `#--${ref.value}`, 'data-ref': ref.value}, formatRef(ref.value, false));
     });
     nxtx.registerCommand('Ref', ref => {
-        return nxtx.html('a', {href: `#--${ref.value}`, 'data-ref': ref.value}, formatPart(ref.value, true));
+        return nxtx.html('a', {href: `#--${ref.value}`, 'data-ref': ref.value}, formatRef(ref.value, true));
+    });
+
+
+
+    nxtx.registerCommand('loc-print', () => {
+        return [
+            nxtx.html('h2', { class: 'list-of-contents' }, 'List of Contents'),
+            ...parts.map(part => nxtx.html('div', { class: `loc-${part.type}` }, `${formatNumbering(part.numbering)} ${part.title}`)),
+            { type: 'command', name: 'pagebreak', args: [] }
+        ];
     });
 
     nxtx.on('postrender', () => {
@@ -72,6 +91,11 @@
         parts = [];
         refs = {};
     });
+
+    // Default
+    style.sheet.insertRule('.loc-chapter { font-size: 14pt }', 0);
+    style.sheet.insertRule('.loc-section { font-size: 13pt; padding-left: 2em }', 1);
+    style.sheet.insertRule('.loc-subsection { font-size: 12pt; padding-left: 4em }', 2);
 
 }());
 //# sourceMappingURL=list-of-contents.js.map
