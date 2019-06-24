@@ -32,7 +32,7 @@ A command can be invoked with zero or more arguments, with the arguments enclose
 \command('test1', 2019)
 ```
 The argument value can be of several types:
-- Command (eg. `\text:bf('const a = new Date()')`)
+- Command (eg. `\text:it(\text:bf(Hello world))`)
 - Command name (eg. `text:bf`)
 - String (enclosed with either `'` or `"`)
 - Integer
