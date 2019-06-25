@@ -66,6 +66,11 @@ array-unique@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/array-unique/-/array-unique-0.2.1.tgz#a1d97ccafcbc2625cc70fadceb36a50c58b01a53"
 
+awaity@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/awaity/-/awaity-1.0.0.tgz#f219a40fcaab6fd72f482ed958656ebc92254489"
+  integrity sha512-jqC/6R4sJqgRuVxnihmmbfV5Zn38WRCH7o8hz3eAEJf2aTFD0MOXrghvmNY8VyxKn0F46Ln8uXfF8OepO6WepA==
+
 braces@^1.8.2:
   version "1.8.5"
   resolved "https://registry.yarnpkg.com/braces/-/braces-1.8.5.tgz#ba77962e12dff969d6b76711e914b737857bf6a7"
