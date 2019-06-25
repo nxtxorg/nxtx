@@ -8,7 +8,7 @@ document.head.appendChild(style);
 
 const parse = argNode => {
     console.log(argNode);
-    if (argNode.type !== 'number') return argNode.value;
+    if (argNode.type !== nxtx.TYPES.NUMBER) return argNode.value;
     return argNode.value + 'mm';
 };
 

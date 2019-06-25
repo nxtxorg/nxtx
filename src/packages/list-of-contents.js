@@ -29,6 +29,7 @@ const registerPart = (type, element) => {
 ].forEach(arr => registerPart(...arr));
 
 nxtx.registerPreprocessor('label', ref => {
+    console.log('label');
     if (refs[ref.value] !== undefined) console.warn(`Attempt to redefine label '${ref.value}' ignored`);
     else refs[ref.value] = parts.length && parts[parts.length - 1];
 });
@@ -76,11 +77,12 @@ nxtx.registerCommand('Ref', ref => {
 
 
 nxtx.registerCommand('loc-print', () => {
-    return [
+    const rendition = [
         nxtx.html('h2', { class: 'list-of-contents' }, 'List of Contents'),
         ...parts.map(part => nxtx.html('div', { class: `loc-${part.type}` }, `${formatNumbering(part.numbering)} ${part.title}`)),
-        { type: 'command', name: 'pagebreak', args: [] }
+        { type: nxtx.TYPE.COMMAND, name: 'pagebreak', args: [] }
     ];
+    return rendition;
 });
 
 nxtx.on('postrender', () => {

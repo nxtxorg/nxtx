@@ -14,7 +14,7 @@ const pkg = {
         'add-css-rule': (rule, index = 1) => style.sheet.insertRule(rule.value, index),
         'set-root-style': (prop, ...values) => document.querySelector('.nxtx-root').style.setProperty(prop, values.map(e => e.value).join(', ')),
         'set-font-family': (...fontFamilies) => ({
-            type: 'command',
+            type: nxtx.TYPE.COMMAND,
             name: 'set-root-style',
             args: ['font-family', ...fontFamilies]
         }),
@@ -29,7 +29,7 @@ const pkg = {
                 document.head.appendChild(link);
             }
 
-            return { type: 'command', name: 'set-font-family', args: fontFamilies };
+            return { type: nxtx.TYPE.COMMAND, name: 'set-font-family', args: fontFamilies };
         }
     }
 };
