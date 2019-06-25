@@ -3,12 +3,27 @@
     License: MIT */
 
 import parser from '../grammar.pegjs';
+import map from 'awaity/map';
+
+export const TYPE = {
+    PARAGRAPH: 1,
+    COMMAND: 2,
+    TEXT: 3,
+    BLOCK: 4,
+    HTML: 5,
+    NODE: 6,
+
+    DICTIONARY: 11,
+    ARRAY: 12,
+    NUMBER: 13,
+    STRING: 14,
+};
 
 const commands = {};
 const preprocessors = {};
 const executeCommand = async (cmd, args) => {
     if (commands[cmd] !== undefined)
-        return await commands[cmd](...(await Promise.all(args.map(arg => arg.type === 'command' ? executeCommand(arg.name, arg.args) : arg))));
+        return await commands[cmd](...(await map(args, arg => arg.type === TYPE.COMMAND ? executeCommand(arg.name, arg.args) : arg)));
     console.warn(`Command '${cmd}' not registered`);
     return await html('b', {class: "error"}, `${cmd}?`);
 };
@@ -33,15 +48,15 @@ const noMerge = { '.': true, ',': true };
 const mergeText = pNode => {
     const textNodes = [];
     const mergedNodes = pNode.value.reduce((acc, node) => {
-        if (node.type === 'text') {
+        if (node.type === TYPE.TEXT) {
             if (noMerge[node.value[0]]) {
-                acc.push({ type: 'text', value: node.value[0] + ' ' });
-                if (node.value.length !== 1) textNodes.push({ type: 'text', value: node.value.substr(1) });
+                acc.push({ type: TYPE.TEXT, value: node.value[0] + ' ' });
+                if (node.value.length !== 1) textNodes.push({ type: TYPE.TEXT, value: node.value.substr(1) });
             }
             else textNodes.push(node);
         } else {
             if (textNodes.length) {
-                acc.push({ type: 'text', value: textNodes.map(n => n.value).join(' ') });
+                acc.push({ type: TYPE.TEXT, value: textNodes.map(n => n.value).join(' ') });
                 textNodes.length = 0;
             }
             acc.push(node);
@@ -49,49 +64,77 @@ const mergeText = pNode => {
         return acc;
     }, []);
     if (textNodes.length)
-        mergedNodes.push({ type: 'text', value: textNodes.map(n => n.value).join(' ') });
+        mergedNodes.push({ type: TYPE.TEXT, value: textNodes.map(n => n.value).join(' ') });
     return { type: pNode.type, value: mergedNodes };
 };
 
 
 const truthy = e => !!e;
-const asyncFlatMap = async (elements, fn) => (await Promise.all(elements.map(fn))).flat();
+const flatMap = async (elements, fn) => (await map(elements, fn)).flat();
+const flatMapFilter = async (elements, fn) => (await map(elements, fn)).flat().filter(truthy);
 
 const baseRenderNode = async node => {
     if (node.split) return document.createTextNode(node);
     if (!node.type) return node;
     switch (node.type) {
-        case 'node':
+        case TYPE.NODE:
             return node;
-        case 'block':
-            return await asyncFlatMap(node.value, baseRenderNode);
-        case 'paragraph':
-            const pNodes = await asyncFlatMap(node.value, baseRenderNode);
+        case TYPE.BLOCK:
+            console.log('block?');
+            return await flatMap(node.value, baseRenderNode);
+        case TYPE.PARAGRAPH:
+            const pNodes = await flatMap(node.value, baseRenderNode);
             if (pNodes.length) pNodes.push(htmlLite('div', { class: 'paragraph-break' }));
             return pNodes;
-        case 'html':
+        case TYPE.HTML:
             return htmlLite('span', { innerHTML: node.value });
-        case 'text':
+        case TYPE.TEXT:
             return document.createTextNode(node.value);
-        case 'command':
+        case TYPE.COMMAND:
             const result = [ await executeCommand(node.name, node.args) ].flat().filter(truthy);
-            return await asyncFlatMap(result, baseRenderNode);
+            return await flatMap(result, baseRenderNode)
     }
     console.error(node);
 };
-
-const executePreprocessors = async paragraphs => {
-    for (let i = 0; i < paragraphs.length; i++) {
-        const paragraph = paragraphs[i];
-        const processed = await asyncFlatMap(paragraph.value, async node => {
-            if (node.type === 'command' && preprocessors[node.name]) {
-                await preprocessors[node.name](...node.args);
-                if (commands[node.name] === undefined) return;
+const flatten = (rootAccumulator, nodes) => {
+    let cleanParagraph;
+    let requiresNew = true;
+    nodes.forEach(node => {
+        if (node.type === TYPE.PARAGRAPH) {
+            requiresNew = true;
+            rootAccumulator.push(flatten([], node.value));
+        }
+        else {
+            if (requiresNew) {
+                requiresNew = false;
+                cleanParagraph = { type: TYPE.PARAGRAPH, value: [] };
+                rootAccumulator.push(cleanParagraph);
             }
-            return node;
-        });
-        paragraph.value = processed.filter(truthy);
+            cleanParagraph.value.push(node);
+        }
+    });
+    return rootAccumulator;
+};
+
+const executePreprocessor = async node => {
+    if (node.type === TYPE.COMMAND && preprocessors[node.name]) {
+        const result = [ await preprocessors[node.name](...node.args) ].flat().filter(truthy);
+        const childResults = await flatMap(result, executePreprocessor);
+        if (commands[node.name] === undefined) return childResults;
     }
+    else if (node.type === TYPE.PARAGRAPH) {
+        node.value = await flatMapFilter(node.value, executePreprocessor);
+        return node;
+    }
+    else return node;
+};
+const executePreprocessors = async paragraphs => {
+    const processedParagraphs = [];
+    for (let i = 0; i < paragraphs.length; i++) {
+        const flattened = flatten([], await flatMapFilter(paragraphs[i].value, executePreprocessor));
+        processedParagraphs.push(...flattened);
+    }
+    return processedParagraphs.flat();
 };
 
 export const render = async (text, root) => {
@@ -110,10 +153,10 @@ export const render = async (text, root) => {
         }
     };
     trigger('prerender');
-    const paragraphs = parse(text);
-    await executePreprocessors(paragraphs);
-    for (let i = 0; i < paragraphs.length; i++) {
-        const children = await baseRenderNode(paragraphs[i]);
+    const paragraphs = parse(text).map(mergeText);
+    const preprocessed = await executePreprocessors(paragraphs);
+    for (let i = 0; i < preprocessed.length; i++) {
+        const children = await baseRenderNode(preprocessed[i]);
         children.forEach(place);
     }
     trigger('postrender');
