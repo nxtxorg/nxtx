@@ -11,7 +11,7 @@ const pkg = {
     name: 'acronyms',
     requires: [ 'basic-formatting' ],
     commands: {
-        'define-ac': (acronym, full) => acronyms[acronym.value] = full.value && false,
+        'define-ac': (acronym, full) => (acronyms[acronym.value] = full.value) && false,
         'ac': acronym => {
             const full = acronyms[acronym.value];
             if (!full) {
@@ -25,7 +25,7 @@ const pkg = {
         }
     },
     hooks: {
-        postrender: () => {
+        prerender: () => {
             acronyms = {};
             usedAcronyms = [];
         }
@@ -34,7 +34,7 @@ const pkg = {
 
 if (nxtx) {
     Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
-    nxtx.on('postrender', pkg.hooks.postrender);
+    nxtx.on('prerender', pkg.hooks.prerender);
 }
 
 export default pkg;

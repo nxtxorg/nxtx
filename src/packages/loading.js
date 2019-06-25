@@ -9,7 +9,7 @@ let loaded = {
 
 const pkg = {
     name: 'loading',
-    commands: {
+    preprocessors: {
         'load:document': async nameNode => {
             const name = nameNode.value.toString();
             const filename = (name.substr(name.length - 5).toLowerCase() !== '.nxtx') ? `${name}.nxtx` : name;
@@ -29,9 +29,8 @@ const pkg = {
                 loaded.documents[filename] = {lastModified, nodes};
             }
             return nodes;
-        }
-    },
-    preprocessors: {
+        },
+
         'load:package': srcNode => new Promise((acc, rej) => {
             if (loaded.packages[srcNode.value])
                 return acc();
@@ -51,7 +50,6 @@ const pkg = {
 };
 
 if (nxtx) {
-    Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
     Object.keys(pkg.preprocessors).forEach(name => nxtx.registerPreprocessor(name, pkg.preprocessors[name]));
 }
 

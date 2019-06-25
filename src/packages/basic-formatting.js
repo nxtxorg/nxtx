@@ -16,7 +16,7 @@ const pkg = {
     commands: {
         'text:it': content => nxtx.html('i', null, content.value),
         'text:bf': content => nxtx.html('b', null, content.value),
-        'text:tt': content => nxtx.html('b', null, content.value),
+        'text:tt': content => nxtx.html('code', null, content.value),
         'dquote': contentNode => `“${contentNode.value}”`,
         'break': () => nxtx.htmlLite('div', { class: 'meta', style: 'height: 1.5em' }),
         'pagebreak': () => nxtx.htmlLite('div', { class: 'meta page-break' }),
