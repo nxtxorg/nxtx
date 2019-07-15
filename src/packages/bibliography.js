@@ -13,7 +13,8 @@ document.head.appendChild(style);
 
 // Default
 style.sheet.insertRule('.bib-entry { margin-bottom: 5px }', 0);
-style.sheet.insertRule(`.bib-entry span { margin-right: 5px }`, 1);
+style.sheet.insertRule('.bib-entry > * { display: inline-block }', 1);
+style.sheet.insertRule(`.bib-entry span { margin-right: 5px }`, 2);
 
 
 
@@ -58,9 +59,8 @@ const pkg = {
         },
         'bib-print': async () => {
             const citedEntries = cited.map(e => entries[e] || console.warn(`Bibliography entry '${e}' not found`)).filter(f => !!f);
-            if (citedEntries.length === 0) {
-                return;
-            }
+            if (citedEntries.length === 0) return console.warn('No bibliography entries cited (?)');
+
             const mapped = citedEntries.map((entryFields, number) => nxtx.html('div', { id: `---${cited[number]}`, class: 'bib bib-entry'},
                 nxtx.html('span', { class: 'bib bib-ordering'}, `[${number + 1}]`),
                 ...Object.keys(entryFieldFormatting)

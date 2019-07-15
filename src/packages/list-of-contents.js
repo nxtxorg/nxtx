@@ -29,9 +29,8 @@ const registerPart = (type, element) => {
 ].forEach(arr => registerPart(...arr));
 
 nxtx.registerPreprocessor('label', ref => {
-    console.log('label');
     if (refs[ref.value] !== undefined) console.warn(`Attempt to redefine label '${ref.value}' ignored`);
-    else refs[ref.value] = parts.length && parts[parts.length - 1];
+    else refs[ref.value] = parts[parts.length - 1];
 });
 nxtx.registerCommand('label', ref => {
     return nxtx.html('span', {id: '--' + ref.value, 'data-label': ref.value});
@@ -85,7 +84,7 @@ nxtx.registerCommand('loc-print', () => {
     return rendition;
 });
 
-nxtx.on('postrender', () => {
+nxtx.on('prerender', () => {
     numbering = { ...baseNumbering };
     parts = [];
     refs = {};

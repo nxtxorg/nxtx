@@ -18,6 +18,23 @@ const pkg = {
             name: 'set-root-style',
             args: ['font-family', ...fontFamilies]
         }),
+        'set-local-font-family': (fontName, fontUrl) => {
+
+            const css = `@font-face { font-family: '${fontName.value}'; src: local('${fontName.value}'), url('${fontUrl.value}'); }`;
+
+            return ([
+                {
+                    type: nxtx.TYPE.COMMAND,
+                    name: 'add-css-root',
+                    args: [ { type: nxtx.TYPE.TEXT, value: css} ]
+                },
+                {
+                    type: nxtx.TYPE.COMMAND,
+                    name: 'set-root-style',
+                    args: ['font-family', fontName]
+                }
+            ]);
+        },
         'set-google-font-family': async (...fontFamilies) => {
             const attr = {
                 rel: 'stylesheet',

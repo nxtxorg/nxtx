@@ -20,7 +20,9 @@ const pkg = {
         'dquote': contentNode => `“${contentNode.value}”`,
         'break': () => nxtx.htmlLite('div', { class: 'meta', style: 'height: 1.5em' }),
         'pagebreak': () => nxtx.htmlLite('div', { class: 'meta page-break' }),
-        'title': titleNode => (document.title = titleNode.value) && false
+        'title': titleNode => (document.title = titleNode.value) && false,
+        'ignore': () => {},
+
     }
 };
 
