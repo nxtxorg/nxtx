@@ -1,20 +1,11 @@
 {
-    const TYPE = {
-        PARAGRAPH: 1,
-        COMMAND: 2,
-        TEXT: 3,
-
-        DICTIONARY: 11,
-        ARRAY: 12,
-        NUMBER: 13,
-        STRING: 14
-    }
+    const TYPE = { PARAGRAPH: 1, COMMAND: 2, TEXT: 3, DICTIONARY: 11, ARRAY: 12, NUMBER: 13, STRING: 14 }
 }
 
 Paragraphs
 	= NEWLINE* head:Paragraph NEWLINE NEWLINE+ tail:Paragraphs { return [head, ...tail] }
     / NEWLINE* head:Paragraph NEWLINE* { return [head] }
-Paragraph = chain:ParagraphChain { return { type: TYPE.PARAGRAPH, value: chain } }
+Paragraph = chain:ParagraphChain { return { type: TYPE.PARAGRAPH, value: chain, location: location() } }
 ParagraphChain 'paragraph'
 	= head:LineContent NEWLINE? tail:ParagraphChain { return [head, ...tail] }
 	/ head:LineContent { return [head] }
@@ -25,7 +16,6 @@ Text 'text'	= text:TextContent+  { return { type: TYPE.TEXT, value: text.join(''
 TextContent 'text' = '\\\\' { return '\\' } / [^\r\n\\]+ { return text() }
 
 Command 'command' = '\\' name:CommandName args:CommandArguments? { return { type: TYPE.COMMAND, name, args: args || [] } }
-
 CommandName 'command name'
 	= CommandChars CommandName { return text() }
 	/ CommandChars [_:-] CommandName { return text() }
