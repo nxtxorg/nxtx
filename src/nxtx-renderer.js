@@ -4,6 +4,8 @@
 
 import parser from '../grammar.pegjs';
 import map from 'awaity/map';
+import mapSeries from 'awaity/mapSeries';
+import reduce from 'awaity/reduce';
 
 export const TYPE = {
     PARAGRAPH: 1,
@@ -28,14 +30,31 @@ const executeCommand = async (cmd, args) => {
     return await html('b', {class: "error"}, `${cmd}?`);
 };
 
-const register = cmdCollection => (cmd, fn, overwrite = false) => {
+const register = (cmdCollection, cmd, fn, overwrite = false) => {
     if (!overwrite && cmdCollection[cmd] !== undefined)
         return console.warn(`Command '${cmd}' is already registered. Set overwrite to true, if you need to overwrite the already registered command.`);
     cmdCollection[cmd] = fn;
 };
-export const registerCommand = register(commands);
-export const registerPreprocessor = register(preprocessors);
-
+/**
+ * Registers a command
+ * @param {string} cmd The name of the command.
+ * @param {Function} fn The command function.
+ * @param {boolean} overwrite Whether to overwrite existing command.
+ */
+export const registerCommand = (cmd, fn, overwrite = false) => register(commands, cmd, fn, overwrite);
+/**
+ * Registers a preprocessor
+ * @param {string} cmd The name of the preprocessor.
+ * @param {Function} fn The preprocessor function.
+ * @param {boolean} overwrite Whether to overwrite existing command.
+ */
+export const registerPreprocessor = (cmd, fn, overwrite = false) => register(preprocessors, cmd, fn, overwrite);
+/**
+ * Verifies this argument types
+ * @param {Array<NxTxType>} cmd The name of the preprocessor.
+ * @param {Function} fn The preprocessor function.
+ * @param {boolean} overwrite Whether to overwrite existing command.
+ */
 export const verifyTypes = (types, ...args) => {
     const invalidTypes = args
         .map((actual, index) => ({expected: types[index], actual, index}))
@@ -45,9 +64,9 @@ export const verifyTypes = (types, ...args) => {
 export const parse = text => parser.parse(text).map(mergeText);
 
 const noMerge = { '.': true, ',': true };
-const mergeText = pNode => {
+const mergeText = paragraph => {
     const textNodes = [];
-    const mergedNodes = pNode.value.reduce((acc, node) => {
+    const mergedNodes = paragraph.value.reduce((acc, node) => {
         if (node.type === TYPE.TEXT) {
             if (noMerge[node.value[0]]) {
                 acc.push({ type: TYPE.TEXT, value: node.value[0] + ' ' });
@@ -65,9 +84,8 @@ const mergeText = pNode => {
     }, []);
     if (textNodes.length)
         mergedNodes.push({ type: TYPE.TEXT, value: textNodes.map(n => n.value).join(' ') });
-    return { type: pNode.type, value: mergedNodes };
+    return { type: paragraph.type, value: mergedNodes };
 };
-
 
 const truthy = e => !!e;
 const flatMap = async (elements, fn) => (await map(elements, fn)).flat();
@@ -79,12 +97,9 @@ const baseRenderNode = async node => {
     switch (node.type) {
         case TYPE.NODE:
             return node;
-        case TYPE.BLOCK:
-            console.log('block?');
-            return await flatMap(node.value, baseRenderNode);
         case TYPE.PARAGRAPH:
             const pNodes = await flatMap(node.value, baseRenderNode);
-            if (pNodes.length) pNodes.push(htmlLite('div', { class: 'paragraph-break' }));
+            if (pNodes.length) pNodes.push(htmlLite('div', { class: 'meta paragraph-break' }));
             return pNodes;
         case TYPE.HTML:
             return htmlLite('span', { innerHTML: node.value });
@@ -96,24 +111,18 @@ const baseRenderNode = async node => {
     }
     console.error(node);
 };
-const flatten = (rootAccumulator, nodes) => {
+const flatten = nodes => {
     let cleanParagraph;
     let requiresNew = true;
-    nodes.forEach(node => {
-        if (node.type === TYPE.PARAGRAPH) {
-            requiresNew = true;
-            rootAccumulator.push(flatten([], node.value));
-        }
+
+    return nodes.reduce((flattened, current) => {
+        if (current.type === TYPE.PARAGRAPH) requiresNew = flattened.push(...flatten(current.value)) && true;
         else {
-            if (requiresNew) {
-                requiresNew = false;
-                cleanParagraph = { type: TYPE.PARAGRAPH, value: [] };
-                rootAccumulator.push(cleanParagraph);
-            }
-            cleanParagraph.value.push(node);
+            if (requiresNew) requiresNew = flattened.push(cleanParagraph = {type: TYPE.PARAGRAPH, value: []}) && false;
+            cleanParagraph.value.push(current);
         }
-    });
-    return rootAccumulator;
+        return flattened;
+    }, []).flat();
 };
 
 const executePreprocessor = async node => {
@@ -124,17 +133,15 @@ const executePreprocessor = async node => {
     }
     else if (node.type === TYPE.PARAGRAPH) {
         node.value = await flatMapFilter(node.value, executePreprocessor);
-        return node;
     }
-    else return node;
+    return node;
 };
 const executePreprocessors = async paragraphs => {
-    const processedParagraphs = [];
-    for (let i = 0; i < paragraphs.length; i++) {
-        const flattened = flatten([], await flatMapFilter(paragraphs[i].value, executePreprocessor));
-        processedParagraphs.push(...flattened);
-    }
-    return processedParagraphs.flat();
+    return await reduce(paragraphs, async (processed, current) => {
+        const preprocessed = await flatMapFilter(current.value, executePreprocessor);
+        processed.push(...flatten(preprocessed));
+        return processed;
+    }, []);
 };
 
 export const render = async (text, root) => {
@@ -153,12 +160,10 @@ export const render = async (text, root) => {
         }
     };
     trigger('prerender');
-    const paragraphs = parse(text).map(mergeText);
+    let paragraphs = parse(text).map(mergeText);
     const preprocessed = await executePreprocessors(paragraphs);
-    for (let i = 0; i < preprocessed.length; i++) {
-        const children = await baseRenderNode(preprocessed[i]);
-        children.forEach(place);
-    }
+    const rendered = await mapSeries(preprocessed, async node => await baseRenderNode(node));
+    rendered.forEach(nodes => nodes.forEach(place));
     trigger('postrender');
 };
 export const htmlLite = (nodeName, attributes) => {

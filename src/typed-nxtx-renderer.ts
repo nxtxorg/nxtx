@@ -1,0 +1,195 @@
+/*  NxTx parser and renderer
+    Author: Malte Rosenbjerg
+    License: MIT */
+
+import parser from './typed-nxtx-parser';
+import map from 'awaity/map';
+import mapSeries from 'awaity/mapSeries';
+import reduce from 'awaity/reduce';
+
+interface MapFunction {
+    <T1, T2> (arg: T1) : T2;
+}
+export interface Node {
+    type: NodeType,
+    value: any,
+    name?: string,
+    args?: Array<Node>
+}
+export enum NodeType {
+    Paragraph = 1,
+    Command,
+    Text,
+    Block,
+    Html,
+    Node,
+    Dictionary = 11,
+    Array,
+    Number,
+    String
+}
+
+export interface ArgumentCheck {
+    expected: NodeType,
+    actual: NodeType,
+    index: number
+}
+export interface TypeCheck {
+    ok: boolean,
+    invalid: Array<ArgumentCheck>
+}
+
+type CommandResultType = Node | HTMLElement | string
+type CommandResult = Array<CommandResultType> | void
+type CommandFunction = (...args:Array<Node>) => any
+const commands : { [key:string]:CommandFunction } = {};
+const preprocessors : { [key:string]:CommandFunction } = {};
+const executeCommand = async (cmd:string, args:Array<Node>) : Promise<CommandResult|HTMLElement> => {
+    if (commands[cmd] !== undefined)
+        return await commands[cmd](...(await map(args, arg => arg.type === NodeType.Command ? executeCommand(arg.name, arg.args) : arg)));
+    console.warn(`Command '${cmd}' not registered`);
+    return await html('b', {class: "error"}, `${cmd}?`);
+};
+
+const register = (cmdCollection:object, cmd:string, fn: CommandFunction, overwrite:boolean = false) : void => {
+    if (!overwrite && cmdCollection[cmd] !== undefined)
+        return console.warn(`Command '${cmd}' is already registered. Set overwrite to true, if you need to overwrite the already registered command.`);
+    cmdCollection[cmd] = fn;
+};
+
+export const registerCommand = (cmd:string, fn:CommandFunction, overwrite?:boolean) : void => register(commands, cmd, fn, overwrite);
+
+export const registerPreprocessor = (cmd:string, fn:CommandFunction, overwrite?:boolean) : void => register(preprocessors, cmd, fn, overwrite);
+
+export const verifyArguments = (types:Array<NodeType>, ...args:Array<Node>) : TypeCheck => {
+    const invalidArguments = args
+        .map((actual:Node, index:number) => ({expected: types[index], actual: actual.type, index}))
+        .filter(type => type.expected !== type.actual);
+    return { ok: invalidArguments.length === 0, invalid: invalidArguments }
+};
+export const parse = (text:string) : Array<Node> => parser.parse(text).map(mergeText);
+
+const noMerge = { '.': true, ',': true };
+const mergeText = (paragraph:Node) : Node => {
+    const textNodes = [];
+    const mergedNodes = paragraph.value.reduce((acc, node) => {
+        if (node.type === NodeType.Text) {
+            if (noMerge[node.value[0]]) {
+                acc.push({ type: NodeType.Text, value: node.value[0] + ' ' });
+                if (node.value.length !== 1) textNodes.push({ type: NodeType.Text, value: node.value.substr(1) });
+            }
+            else textNodes.push(node);
+        } else {
+            if (textNodes.length) {
+                acc.push({ type: NodeType.Text, value: textNodes.map(n => n.value).join(' ') });
+                textNodes.length = 0;
+            }
+            acc.push(node);
+        }
+        return acc;
+    }, []);
+    if (textNodes.length)
+        mergedNodes.push({ type: NodeType.Text, value: textNodes.map(n => n.value).join(' ') });
+    return { type: paragraph.type, value: mergedNodes };
+};
+
+const truthy = e => !!e;
+
+const flatMap = async (elements:Array<any>, fn:Function) : Promise<Array<any>> => (await map(elements, fn)).flat();
+const flatMapFilter = async (elements:Array<any>, fn:Function) : Promise<Array<any>> => (await map(elements, fn)).flat().filter(truthy);
+
+const baseRenderNode = async (node:Node|string|any) => {
+    if (typeof node === 'string') return document.createTextNode(node);
+    if (!node.type) return node;
+    switch (node.type) {
+        case NodeType.Node:
+            return node;
+        case NodeType.Paragraph:
+            const pNodes = await flatMap(node.value, baseRenderNode);
+            if (pNodes.length) pNodes.push(htmlLite('div', { class: 'meta paragraph-break' }));
+            return pNodes;
+        case NodeType.Html:
+            return htmlLite('span', { innerHTML: node.value });
+        case NodeType.Text:
+            return document.createTextNode(node.value);
+        case NodeType.Command:
+            const result = [ await executeCommand(node.name, node.args) ].flat().filter(truthy);
+            return await flatMap(result, baseRenderNode)
+    }
+    console.error(node);
+};
+const flatten = (nodes:Array<Node>) : Array<Node> => {
+    let cleanParagraph;
+    let requiresNew = true;
+
+    return nodes.reduce((flattened, current) => {
+        if (current.type === NodeType.Paragraph) requiresNew = flattened.push(...flatten(current.value)) && true;
+        else {
+            if (requiresNew) requiresNew = flattened.push(cleanParagraph = {type: NodeType.Paragraph, value: []}) && false;
+            cleanParagraph.value.push(current);
+        }
+        return flattened;
+    }, []).flat();
+};
+
+const executePreprocessor = async (node:Node) : Promise<CommandResult|Node> => {
+    if (node.type === NodeType.Command && preprocessors[node.name]) {
+        const result = [ await preprocessors[node.name](...node.args) ].flat().filter(truthy);
+        const childResults = await flatMap(result, executePreprocessor);
+        if (commands[node.name] === undefined) return childResults;
+    }
+    else if (node.type === NodeType.Paragraph) {
+        node.value = await flatMapFilter(node.value, executePreprocessor);
+    }
+    return node;
+};
+const executePreprocessors = async (paragraphs:Array<Node>) => {
+    return await reduce(paragraphs, async (processed, current) => {
+        const preprocessed = await flatMapFilter(current.value, executePreprocessor);
+        processed.push(...flatten(preprocessed));
+        return processed;
+    }, []);
+};
+
+export const render = async (text:string, root:HTMLElement) : Promise<void> => {
+    while (root.firstChild) root.removeChild(root.firstChild);
+    let page = 0, currentPage : HTMLElement;
+    const newPage = () => {
+        root.appendChild(currentPage = htmlLite('section', { id: `page-${++page}`, class: 'sheet', 'data-page': page }));
+        currentPage.appendChild(htmlLite('div', { class: 'meta page-start' }));
+    };
+    newPage();
+    const place = node => {
+        currentPage.appendChild(node);
+        if (currentPage.scrollHeight > currentPage.clientHeight) {
+            newPage();
+            currentPage.appendChild(node);
+        }
+    };
+    trigger('prerender');
+    let paragraphs = parse(text).map(mergeText);
+    const preprocessed = await executePreprocessors(paragraphs);
+    const rendered = await mapSeries(preprocessed, async (node:Node) => await baseRenderNode(node));
+    rendered.forEach(nodes => nodes.forEach(place));
+    trigger('postrender');
+};
+export const htmlLite = (nodeName:string, attributes:object) : HTMLElement => {
+    let n = document.createElement(nodeName);
+    Object.keys(attributes || {}).forEach(k => n.setAttribute(k, attributes[k]));
+    return n;
+};
+export const html = async (nodeName:string, attributes:object, ...children:Array<Node|string>) : Promise<HTMLElement> => {
+    const n = htmlLite(nodeName, attributes);
+    for (let i = 0; i < children.length; i++) n.appendChild(await baseRenderNode(children[i]));
+    return n;
+};
+
+const hooks = { prerender: [], postrender: [] };
+const trigger = (event:string) : void => (hooks[event] || []).forEach(fn => fn());
+export const on = (event:string, handler:Function) : void => {
+    if (!hooks[event].includes(handler)) hooks[event].push(handler);
+};
+export const off = (event:string, handler:Function) : void => {
+    const index = hooks[event].indexOf(handler);
+    if (index !== -1) hooks[event].splice(index, 1);
+};
