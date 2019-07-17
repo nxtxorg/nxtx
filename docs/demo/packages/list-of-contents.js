@@ -1,2 +1,132 @@
-!function(){"use strict";let e={},t={},n=[],l={};const s=document.createElement("style");s.id="basic-formatting-style-block",document.head.appendChild(s);[["chapter","h1"],["section","h3"],["subsection","h4"]].forEach(l=>((l,s)=>{e[l]=0,t={...e},nxtx.registerPreprocessor(l,e=>{t[l]+=1,a(l),n.push({type:l,title:e.value,numbering:{...t}})}),nxtx.registerCommand(l,e=>nxtx.html(s,null,e.value))})(...l)),nxtx.registerPreprocessor("label",e=>{console.log("label"),void 0!==l[e.value]?console.warn(`Attempt to redefine label '${e.value}' ignored`):l[e.value]=n.length&&n[n.length-1]}),nxtx.registerCommand("label",e=>nxtx.html("span",{id:"--"+e.value,"data-label":e.value}));const a=e=>{const n=Object.keys(t);let l=!1;for(let s=0;s<n.length;s++)l?t[n[s]]=0:n[s]===e&&(l=!0)},r=e=>Object.keys(e).map(t=>e[t]).join(".").replace(/[.0]+$/,""),o=(e,t)=>{const n=l[e];if(!n)return console.warn(`Label '${e}' has not been referenced`),nxtx.html("b",{class:"warning"},`${e}`);let s="";switch(n.type){case"chapter":s=`chapter ${r(n.numbering)}`;break;case"section":case"subsection":s=`section ${r(n.numbering)}`}return t?(e=>e[0].toUpperCase()+e.substr(1))(s):s};nxtx.registerCommand("ref",e=>nxtx.html("a",{href:`#--${e.value}`,"data-ref":e.value},o(e.value,!1))),nxtx.registerCommand("Ref",e=>nxtx.html("a",{href:`#--${e.value}`,"data-ref":e.value},o(e.value,!0))),nxtx.registerCommand("loc-print",()=>{return[nxtx.html("h2",{class:"list-of-contents"},"List of Contents"),...n.map(e=>nxtx.html("div",{class:`loc-${e.type}`},`${r(e.numbering)} ${e.title}`)),{type:nxtx.TYPE.COMMAND,name:"pagebreak",args:[]}]}),nxtx.on("postrender",()=>{t={...e},n=[],l={}}),s.sheet.insertRule(".loc-chapter { font-size: 14pt }",0),s.sheet.insertRule(".loc-section { font-size: 13pt; padding-left: 2em }",1),s.sheet.insertRule(".loc-subsection { font-size: 12pt; padding-left: 4em }",2)}();
+(function () {
+    'use strict';
+
+    /*! *****************************************************************************
+    Copyright (c) Microsoft Corporation. All rights reserved.
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of the
+    License at http://www.apache.org/licenses/LICENSE-2.0
+
+    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+    MERCHANTABLITY OR NON-INFRINGEMENT.
+
+    See the Apache Version 2.0 License for specific language governing permissions
+    and limitations under the License.
+    ***************************************************************************** */
+
+    var __assign = function() {
+        __assign = Object.assign || function __assign(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+            }
+            return t;
+        };
+        return __assign.apply(this, arguments);
+    };
+
+    var NodeType;
+    (function (NodeType) {
+        NodeType[NodeType["Paragraph"] = 1] = "Paragraph";
+        NodeType[NodeType["Command"] = 2] = "Command";
+        NodeType[NodeType["Text"] = 3] = "Text";
+        NodeType[NodeType["Block"] = 4] = "Block";
+        NodeType[NodeType["Html"] = 5] = "Html";
+        NodeType[NodeType["Node"] = 6] = "Node";
+        NodeType[NodeType["Dictionary"] = 11] = "Dictionary";
+        NodeType[NodeType["Array"] = 12] = "Array";
+        NodeType[NodeType["Number"] = 13] = "Number";
+        NodeType[NodeType["String"] = 14] = "String";
+    })(NodeType || (NodeType = {}));
+
+    var baseNumbering = {};
+    var numbering = {};
+    var parts = [];
+    var refs = {};
+    var style = document.createElement("style");
+    style.id = 'basic-formatting-style-block';
+    document.head.appendChild(style);
+    var sheet = style.sheet;
+    var registerPart = function (type, element) {
+        baseNumbering[type] = 0;
+        numbering = __assign({}, baseNumbering);
+        nxtx.registerPreprocessor(type, function (content) {
+            numbering[type] += 1;
+            resetChildrenNumbering(type);
+            parts.push({ type: type, title: content.value, numbering: __assign({}, numbering) });
+        });
+        nxtx.registerCommand(type, function (content) { return nxtx.html(element, null, content.value); });
+    };
+    [
+        ['chapter', 'h1'],
+        ['section', 'h3'],
+        ['subsection', 'h4'],
+    ].forEach(function (arr) { return registerPart(arr[0], arr[1]); });
+    nxtx.registerPreprocessor('label', function (ref) {
+        if (refs[ref.value] !== undefined)
+            console.warn("Attempt to redefine label '" + ref.value + "' ignored");
+        else
+            refs[ref.value] = parts[parts.length - 1];
+    });
+    nxtx.registerCommand('label', function (ref) {
+        return nxtx.html('span', { id: '--' + ref.value, 'data-label': ref.value });
+    });
+    var resetChildrenNumbering = function (type) {
+        var types = Object.keys(numbering);
+        var reset = false;
+        for (var i = 0; i < types.length; i++) {
+            if (reset)
+                numbering[types[i]] = 0;
+            else if (types[i] === type)
+                reset = true;
+        }
+    };
+    var capitalizeStr = function (str) { return str[0].toUpperCase() + str.substr(1); };
+    var formatNumbering = function (numbering) { return Object.keys(numbering).map(function (k) { return numbering[k]; }).join('.').replace(/[.0]+$/, ''); };
+    var formatRef = function (ref, capitalize) {
+        var part = refs[ref];
+        if (!part) {
+            console.warn("Label '" + ref + "' has not been referenced");
+            return nxtx.html('b', { class: "warning" }, "" + ref);
+        }
+        var result = '';
+        switch (part.type) {
+            case 'chapter':
+                result = "chapter " + formatNumbering(part.numbering);
+                break;
+            case 'section':
+                result = "section " + formatNumbering(part.numbering);
+                break;
+            case 'subsection':
+                result = "section " + formatNumbering(part.numbering);
+                break;
+        }
+        return capitalize ? capitalizeStr(result) : result;
+    };
+    nxtx.registerCommand('ref', function (ref) {
+        return nxtx.html('a', { href: "#--" + ref.value, 'data-ref': ref.value }, formatRef(ref.value, false));
+    });
+    nxtx.registerCommand('Ref', function (ref) {
+        return nxtx.html('a', { href: "#--" + ref.value, 'data-ref': ref.value }, formatRef(ref.value, true));
+    });
+    nxtx.registerCommand('loc-print', function () {
+        var rendition = [
+            nxtx.html('h2', { class: 'list-of-contents' }, 'List of Contents')
+        ].concat(parts.map(function (part) { return nxtx.html('div', { class: "loc-" + part.type }, formatNumbering(part.numbering) + " " + part.title); }), [
+            { type: NodeType.Command, name: 'pagebreak', args: [] }
+        ]);
+        return rendition;
+    });
+    nxtx.on('prerender', function () {
+        numbering = __assign({}, baseNumbering);
+        parts = [];
+        refs = {};
+    });
+    sheet.insertRule('.loc-chapter { font-size: 14pt }', 0);
+    sheet.insertRule('.loc-section { font-size: 13pt; padding-left: 2em }', 1);
+    sheet.insertRule('.loc-subsection { font-size: 12pt; padding-left: 4em }', 2);
+
+}());
 //# sourceMappingURL=list-of-contents.js.map

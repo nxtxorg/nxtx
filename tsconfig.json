@@ -1,15 +1,12 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": { "*": ["types/*"] },
     "target": "es5",
     "sourceMap": true,
     "removeComments": true,
-    "preserveConstEnums": true
   },
   "lib": [
-    "es2017",
-    "dom"
+    "dom",
+    "es6"
   ],
   "include": [
     "src/**/*.ts"

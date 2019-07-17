@@ -1,2 +1,39 @@
-var nxtx_acronyms=function(){"use strict";let e={},n=[];const r={name:"acronyms",requires:["basic-formatting"],commands:{"define-ac":(n,r)=>(e[n.value]=r.value)&&!1,ac:r=>{const a=e[r.value];return a?n.includes(r.value)?r.value:(n.push(r.value),`${a} (${r.value})`):(console.warn(`Acronym '${r.value}' not defined`),nxtx.html("b",{class:"warning"},`${r.value}!`))}},hooks:{prerender:()=>{e={},n=[]}}};return nxtx&&(Object.keys(r.commands).forEach(e=>nxtx.registerCommand(e,r.commands[e])),nxtx.on("prerender",r.hooks.prerender)),r}();
+var nxtx_acronyms = (function () {
+    'use strict';
+
+    var acronyms = {};
+    var usedAcronyms = [];
+    var pkg = {
+        name: 'acronyms',
+        requires: ['basic-formatting'],
+        commands: {
+            'define-ac': function (acronym, full) { return (acronyms[acronym.value] = full.value) && undefined; },
+            'ac': function (acronym) {
+                var full = acronyms[acronym.value];
+                if (!full) {
+                    console.warn("Acronym '" + acronym.value + "' not defined");
+                    return nxtx.html('b', { class: "warning" }, acronym.value + "!");
+                }
+                if (usedAcronyms.includes(acronym.value)) {
+                    return nxtx.text(acronym.value);
+                }
+                usedAcronyms.push(acronym.value);
+                return nxtx.text(full + " (" + acronym.value + ")");
+            }
+        },
+        hooks: {
+            prerender: function () {
+                acronyms = {};
+                usedAcronyms = [];
+            }
+        }
+    };
+    if (nxtx) {
+        Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
+        nxtx.on('prerender', pkg.hooks.prerender);
+    }
+
+    return pkg;
+
+}());
 //# sourceMappingURL=acronyms.js.map

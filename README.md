@@ -140,11 +140,11 @@ The NxTx-parser exports a number of functions all listed here:
 ### Some packages
 I have created some packages, which are bundles of commands and preprocessors, for NxTx
 - Acronyms (`/src/packages/acronyms.js`)
-- Basic formatting (`/src/packages/basic-formatting.js`)
-- Bibliography (`/src/packages/bibliography.js`)
-- Debug render time (`/src/packages/debug-render-time.js`)
-- List of contents (`/src/packages/list-of-contents.js`)
-- Loading (`/src/packages/loading.js`)
-- Styling (`/src/packages/styling.js`)
+- Basic formatting (`/src/packages/basic-formatting.ts`)
+- Bibliography (`/src/packages/bibliography.ts`)
+- Debug render time (`/src/packages/debug-render-time.ts`)
+- List of contents (`/src/packages/list-of-contents.ts`)
+- Loading (`/src/packages/loading.ts`)
+- Styling (`/src/packages/styling.ts`)
 
 And a __core__ package which bundles `basic-formatting`, `loading`, `styling` and `layout` together

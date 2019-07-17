@@ -6,45 +6,12 @@ import parser from './typed-nxtx-parser';
 import map from 'awaity/map';
 import mapSeries from 'awaity/mapSeries';
 import reduce from 'awaity/reduce';
+import { Node, NodeType, TypeCheck, CommandFunction, CommandResult } from "./nxtx-types";
+import Nxtx from "./nxtx-interface";
 
-interface MapFunction {
-    <T1, T2> (arg: T1) : T2;
-}
-export interface Node {
-    type: NodeType,
-    value: any,
-    name?: string,
-    args?: Array<Node>
-}
-export enum NodeType {
-    Paragraph = 1,
-    Command,
-    Text,
-    Block,
-    Html,
-    Node,
-    Dictionary = 11,
-    Array,
-    Number,
-    String
-}
-
-export interface ArgumentCheck {
-    expected: NodeType,
-    actual: NodeType,
-    index: number
-}
-export interface TypeCheck {
-    ok: boolean,
-    invalid: Array<ArgumentCheck>
-}
-
-type CommandResultType = Node | HTMLElement | string
-type CommandResult = Array<CommandResultType> | void
-type CommandFunction = (...args:Array<Node>) => any
 const commands : { [key:string]:CommandFunction } = {};
 const preprocessors : { [key:string]:CommandFunction } = {};
-const executeCommand = async (cmd:string, args:Array<Node>) : Promise<CommandResult|HTMLElement> => {
+const executeCommand = async (cmd:string, args:Array<Node>) : Promise<CommandResult> => {
     if (commands[cmd] !== undefined)
         return await commands[cmd](...(await map(args, arg => arg.type === NodeType.Command ? executeCommand(arg.name, arg.args) : arg)));
     console.warn(`Command '${cmd}' not registered`);
@@ -57,17 +24,19 @@ const register = (cmdCollection:object, cmd:string, fn: CommandFunction, overwri
     cmdCollection[cmd] = fn;
 };
 
-export const registerCommand = (cmd:string, fn:CommandFunction, overwrite?:boolean) : void => register(commands, cmd, fn, overwrite);
+const registerCommand = (cmd:string, fn:CommandFunction, overwrite?:boolean) : void => register(commands, cmd, fn, overwrite);
 
-export const registerPreprocessor = (cmd:string, fn:CommandFunction, overwrite?:boolean) : void => register(preprocessors, cmd, fn, overwrite);
+const registerPreprocessor = (cmd:string, fn:CommandFunction, overwrite?:boolean) : void => register(preprocessors, cmd, fn, overwrite);
 
-export const verifyArguments = (types:Array<NodeType>, ...args:Array<Node>) : TypeCheck => {
+const verifyArguments = (types:Array<NodeType>, ...args:Array<Node>) : TypeCheck => {
     const invalidArguments = args
         .map((actual:Node, index:number) => ({expected: types[index], actual: actual.type, index}))
         .filter(type => type.expected !== type.actual);
     return { ok: invalidArguments.length === 0, invalid: invalidArguments }
 };
-export const parse = (text:string) : Array<Node> => parser.parse(text).map(mergeText);
+const parse = (text:string) : Array<Node> => parser.parse(text).map(mergeText);
+
+
 
 const noMerge = { '.': true, ',': true };
 const mergeText = (paragraph:Node) : Node => {
@@ -99,7 +68,7 @@ const flatMap = async (elements:Array<any>, fn:Function) : Promise<Array<any>> =
 const flatMapFilter = async (elements:Array<any>, fn:Function) : Promise<Array<any>> => (await map(elements, fn)).flat().filter(truthy);
 
 const baseRenderNode = async (node:Node|string|any) => {
-    if (typeof node === 'string') return document.createTextNode(node);
+    if (typeof node === 'string') return text(node);
     if (!node.type) return node;
     switch (node.type) {
         case NodeType.Node:
@@ -113,27 +82,30 @@ const baseRenderNode = async (node:Node|string|any) => {
         case NodeType.Text:
             return document.createTextNode(node.value);
         case NodeType.Command:
+            // @ts-ignore
             const result = [ await executeCommand(node.name, node.args) ].flat().filter(truthy);
             return await flatMap(result, baseRenderNode)
     }
     console.error(node);
 };
-const flatten = (nodes:Array<Node>) : Array<Node> => {
+const flattenNodes = (nodes:Array<Node>) : Array<Node> => {
     let cleanParagraph;
     let requiresNew = true;
 
     return nodes.reduce((flattened, current) => {
-        if (current.type === NodeType.Paragraph) requiresNew = flattened.push(...flatten(current.value)) && true;
+        if (current.type === NodeType.Paragraph) requiresNew = flattened.push(...flattenNodes(current.value)) && true;
         else {
             if (requiresNew) requiresNew = flattened.push(cleanParagraph = {type: NodeType.Paragraph, value: []}) && false;
             cleanParagraph.value.push(current);
         }
         return flattened;
+        // @ts-ignore
     }, []).flat();
 };
 
 const executePreprocessor = async (node:Node) : Promise<CommandResult|Node> => {
     if (node.type === NodeType.Command && preprocessors[node.name]) {
+        // @ts-ignore
         const result = [ await preprocessors[node.name](...node.args) ].flat().filter(truthy);
         const childResults = await flatMap(result, executePreprocessor);
         if (commands[node.name] === undefined) return childResults;
@@ -146,12 +118,12 @@ const executePreprocessor = async (node:Node) : Promise<CommandResult|Node> => {
 const executePreprocessors = async (paragraphs:Array<Node>) => {
     return await reduce(paragraphs, async (processed, current) => {
         const preprocessed = await flatMapFilter(current.value, executePreprocessor);
-        processed.push(...flatten(preprocessed));
+        processed.push(...flattenNodes(preprocessed));
         return processed;
     }, []);
 };
 
-export const render = async (text:string, root:HTMLElement) : Promise<void> => {
+const render = async (text:string, root:HTMLElement) : Promise<void> => {
     while (root.firstChild) root.removeChild(root.firstChild);
     let page = 0, currentPage : HTMLElement;
     const newPage = () => {
@@ -173,12 +145,17 @@ export const render = async (text:string, root:HTMLElement) : Promise<void> => {
     rendered.forEach(nodes => nodes.forEach(place));
     trigger('postrender');
 };
-export const htmlLite = (nodeName:string, attributes:object) : HTMLElement => {
+const text = (content:string) : Text => {
+    return document.createTextNode(content);
+};
+const htmlLite = (nodeName:string, attributes:object) : HTMLElement => {
     let n = document.createElement(nodeName);
     Object.keys(attributes || {}).forEach(k => n.setAttribute(k, attributes[k]));
     return n;
 };
-export const html = async (nodeName:string, attributes:object, ...children:Array<Node|string>) : Promise<HTMLElement> => {
+
+
+const html = async (nodeName:string, attributes:object, ...children:Array<Promise<HTMLElement|Node|string>|HTMLElement|Node|string>) : Promise<HTMLElement> => {
     const n = htmlLite(nodeName, attributes);
     for (let i = 0; i < children.length; i++) n.appendChild(await baseRenderNode(children[i]));
     return n;
@@ -186,10 +163,24 @@ export const html = async (nodeName:string, attributes:object, ...children:Array
 
 const hooks = { prerender: [], postrender: [] };
 const trigger = (event:string) : void => (hooks[event] || []).forEach(fn => fn());
-export const on = (event:string, handler:Function) : void => {
+const on = (event:string, handler:Function) : void => {
     if (!hooks[event].includes(handler)) hooks[event].push(handler);
 };
-export const off = (event:string, handler:Function) : void => {
+const off = (event:string, handler:Function) : void => {
     const index = hooks[event].indexOf(handler);
     if (index !== -1) hooks[event].splice(index, 1);
 };
+
+const nxtx : Nxtx = {
+    registerCommand,
+    registerPreprocessor,
+    verifyArguments,
+    parse,
+    render,
+    text,
+    htmlLite,
+    html,
+    off,
+    on
+};
+export default nxtx;

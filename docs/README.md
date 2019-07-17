@@ -87,9 +87,9 @@ nxtx.registerCommand('text:bf', async contentNode => await nxtx.html('b', null, 
 ## Packages
 I have created some packages, which are bundles of commands, for NxTx
 - Acronyms (`/src/libs/acronyms.js`)
-- Basic formatting (`/src/libs/basic-formatting.js`)
-- Bibliography (`/src/libs/bibliography.js`)
-- Debug render time (`/src/libs/debug-render-time.js`)
-- List of contents (`/src/libs/list-of-contents.js`)
-- Loading (`/src/libs/loading.js`)
-- Styling (`/src/libs/styling.js`)
+- Basic formatting (`/src/libs/basic-formatting.ts`)
+- Bibliography (`/src/libs/bibliography.ts`)
+- Debug render time (`/src/libs/debug-render-time.ts`)
+- List of contents (`/src/libs/list-of-contents.ts`)
+- Loading (`/src/libs/loading.ts`)
+- Styling (`/src/libs/styling.ts`)
