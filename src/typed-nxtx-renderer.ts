@@ -7,7 +7,6 @@ import map from 'awaity/map';
 import mapSeries from 'awaity/mapSeries';
 import reduce from 'awaity/reduce';
 import {Node, NodeType, TypeCheck, CommandFunction, CommandResult, Package, Nxtx} from "./nxtx-types";
-import pkg from "./packages/bibliography";
 
 const commands : { [key:string]:CommandFunction } = {};
 const preprocessors : { [key:string]:CommandFunction } = {};
