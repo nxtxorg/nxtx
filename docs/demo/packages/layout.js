@@ -57,10 +57,8 @@ var nxtx_layout = (function () {
             'set-margin': function (dictNode) { return Object.keys(dictNode.value).forEach(function (key) { return marginFormatters[key](parse(dictNode.value[key])); }); }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
-        Object.keys(pkg.preprocessors).forEach(function (name) { return nxtx.registerPreprocessor(name, pkg.preprocessors[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg);
 
     return pkg;
 

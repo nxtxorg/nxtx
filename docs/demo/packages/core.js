@@ -22,9 +22,8 @@ var nxtx_core = (function () {
             'ignore': function () { return undefined; },
         }
     };
-    if (nxtx) {
-        Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg);
 
     var NodeType;
     (function (NodeType) {
@@ -50,9 +49,8 @@ var nxtx_core = (function () {
             'images': function (srcArray) { return srcArray.value.map(function (srcNode) { return nxtx.htmlLite('img', { src: srcNode.value, style: "max-width: calc(" + (99.9 / srcArray.value.length) + "% - 4px); margin: 2px" }); }); }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg$1.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg$1.commands[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg$1);
 
     var style$1 = document.createElement("style");
     style$1.id = 'layout-style-block';
@@ -96,10 +94,8 @@ var nxtx_core = (function () {
             'set-margin': function (dictNode) { return Object.keys(dictNode.value).forEach(function (key) { return marginFormatters[key](parse(dictNode.value[key])); }); }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg$2.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg$2.commands[name]); });
-        Object.keys(pkg$2.preprocessors).forEach(function (name) { return nxtx.registerPreprocessor(name, pkg$2.preprocessors[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg$2);
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -208,9 +204,8 @@ var nxtx_core = (function () {
             }); }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg$3.preprocessors).forEach(function (name) { return nxtx.registerPreprocessor(name, pkg$3.preprocessors[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg$3);
 
     var _this$1 = undefined;
     var style$2 = document.createElement("style");
@@ -221,15 +216,15 @@ var nxtx_core = (function () {
         name: 'styling',
         commands: {
             'add-css-rule': function (rule, index) {
-                if (index === void 0) { index = 1; }
-                return sheet$2.insertRule(rule.value, index);
+                if (index === void 0) { index = { type: NodeType.Number, value: 1 }; }
+                return sheet$2.insertRule(rule.value, index.value) && undefined;
             },
             'set-root-style': function (prop) {
                 var values = [];
                 for (var _i = 1; _i < arguments.length; _i++) {
                     values[_i - 1] = arguments[_i];
                 }
-                return document.querySelector('.nxtx-root').style.setProperty(prop, values.map(function (e) { return e.value; }).join(', '));
+                return document.querySelector('.nxtx-root').style.setProperty(prop.value, values.map(function (e) { return e.value; }).join(', '));
             },
             'set-font-family': function () {
                 var fontFamilies = [];
@@ -239,7 +234,7 @@ var nxtx_core = (function () {
                 return ({
                     type: NodeType.Command,
                     name: 'set-root-style',
-                    args: ['font-family'].concat(fontFamilies)
+                    args: [{ type: NodeType.String, value: 'font-family' }].concat(fontFamilies)
                 });
             },
             'set-local-font-family': function (fontName, fontUrl) {
@@ -253,7 +248,7 @@ var nxtx_core = (function () {
                     {
                         type: NodeType.Command,
                         name: 'set-root-style',
-                        args: ['font-family', fontName]
+                        args: [{ type: NodeType.String, value: 'font-family' }, fontName]
                     }
                 ]);
             },
@@ -285,9 +280,8 @@ var nxtx_core = (function () {
             }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg$4.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg$4.commands[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg$4);
 
     var core = {
         formatting: pkg,

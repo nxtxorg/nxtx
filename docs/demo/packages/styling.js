@@ -76,15 +76,15 @@ var nxtx_styling = (function () {
         name: 'styling',
         commands: {
             'add-css-rule': function (rule, index) {
-                if (index === void 0) { index = 1; }
-                return sheet.insertRule(rule.value, index);
+                if (index === void 0) { index = { type: NodeType.Number, value: 1 }; }
+                return sheet.insertRule(rule.value, index.value) && undefined;
             },
             'set-root-style': function (prop) {
                 var values = [];
                 for (var _i = 1; _i < arguments.length; _i++) {
                     values[_i - 1] = arguments[_i];
                 }
-                return document.querySelector('.nxtx-root').style.setProperty(prop, values.map(function (e) { return e.value; }).join(', '));
+                return document.querySelector('.nxtx-root').style.setProperty(prop.value, values.map(function (e) { return e.value; }).join(', '));
             },
             'set-font-family': function () {
                 var fontFamilies = [];
@@ -94,7 +94,7 @@ var nxtx_styling = (function () {
                 return ({
                     type: NodeType.Command,
                     name: 'set-root-style',
-                    args: ['font-family'].concat(fontFamilies)
+                    args: [{ type: NodeType.String, value: 'font-family' }].concat(fontFamilies)
                 });
             },
             'set-local-font-family': function (fontName, fontUrl) {
@@ -108,7 +108,7 @@ var nxtx_styling = (function () {
                     {
                         type: NodeType.Command,
                         name: 'set-root-style',
-                        args: ['font-family', fontName]
+                        args: [{ type: NodeType.String, value: 'font-family' }, fontName]
                     }
                 ]);
             },
@@ -140,9 +140,8 @@ var nxtx_styling = (function () {
             }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg);
 
     return pkg;
 

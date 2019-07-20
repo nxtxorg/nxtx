@@ -108,9 +108,8 @@ var nxtx_loading = (function () {
             }); }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg.preprocessors).forEach(function (name) { return nxtx.registerPreprocessor(name, pkg.preprocessors[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg);
 
     return pkg;
 

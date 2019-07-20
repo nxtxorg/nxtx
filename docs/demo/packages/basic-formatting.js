@@ -22,9 +22,8 @@ var nxtx_basic_formatting = (function () {
             'ignore': function () { return undefined; },
         }
     };
-    if (nxtx) {
-        Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg);
 
     return pkg;
 

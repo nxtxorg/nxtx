@@ -1767,7 +1767,7 @@
     })();
 
     var parser$1 = parser;
-    console.log(parser$1);
+    //# sourceMappingURL=typed-nxtx-parser.js.map
 
     function unwrapExports (x) {
     	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
@@ -2077,6 +2077,28 @@
         return { ok: invalidArguments.length === 0, invalid: invalidArguments };
     };
     var parse = function (text) { return parser$1.parse(text).map(mergeText); };
+    var registeredPackages = [];
+    var registerPackage = function (pkg) {
+        if (pkg.commands) {
+            Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
+        }
+        if (pkg.preprocessors) {
+            Object.keys(pkg.preprocessors).forEach(function (name) { return nxtx.registerPreprocessor(name, pkg.preprocessors[name]); });
+        }
+        if (pkg.hooks) {
+            if (pkg.hooks.prerender)
+                on('prerender', pkg.hooks.prerender);
+            if (pkg.hooks.postrender)
+                on('postrender', pkg.hooks.postrender);
+        }
+        if (pkg.requires) {
+            pkg.requires.forEach(function (req) {
+                if (!registeredPackages.includes(req))
+                    console.warn("Package '" + pkg.name + "' requires '" + req + "' which has not been registered");
+            });
+        }
+        registeredPackages.push(pkg.name);
+    };
     var noMerge = { '.': true, ',': true };
     var mergeText = function (paragraph) {
         var textNodes = [];
@@ -2305,6 +2327,7 @@
         registerCommand: registerCommand,
         registerPreprocessor: registerPreprocessor,
         verifyArguments: verifyArguments,
+        registerPackage: registerPackage,
         parse: parse,
         render: render,
         text: text,

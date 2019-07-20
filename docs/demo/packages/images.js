@@ -25,9 +25,8 @@ var nxtx_images = (function () {
             'images': function (srcArray) { return srcArray.value.map(function (srcNode) { return nxtx.htmlLite('img', { src: srcNode.value, style: "max-width: calc(" + (99.9 / srcArray.value.length) + "% - 4px); margin: 2px" }); }); }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg);
 
     return pkg;
 

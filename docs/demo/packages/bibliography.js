@@ -148,10 +148,8 @@ var nxtx_bibliography = (function () {
             },
         }
     };
-    if (nxtx) {
-        Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
-        Object.keys(pkg.preprocessors).forEach(function (name) { return nxtx.registerPreprocessor(name, pkg.preprocessors[name]); });
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg);
 
     return pkg;
 

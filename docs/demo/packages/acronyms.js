@@ -28,10 +28,8 @@ var nxtx_acronyms = (function () {
             }
         }
     };
-    if (nxtx) {
-        Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
-        nxtx.on('prerender', pkg.hooks.prerender);
-    }
+    if (nxtx)
+        nxtx.registerPackage(pkg);
 
     return pkg;
 
