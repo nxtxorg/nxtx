@@ -2,8 +2,7 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import Nxtx from '../nxtx-interface';
-import { Package } from '../nxtx-types';
+import { Package, Nxtx } from '../nxtx-types';
 declare const nxtx: Nxtx;
 
 let started;

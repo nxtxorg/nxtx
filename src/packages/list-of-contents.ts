@@ -2,8 +2,7 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import Nxtx from '../nxtx-interface';
-import {CommandResult, NodeType, Package} from '../nxtx-types';
+import {CommandResult, NodeType, Package, Nxtx} from '../nxtx-types';
 declare const nxtx: Nxtx;
 
 let baseNumbering = {};

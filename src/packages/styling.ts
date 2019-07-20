@@ -2,8 +2,7 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import Nxtx from '../nxtx-interface';
-import {NodeType} from '../nxtx-types';
+import {NodeType, Nxtx, Package} from '../nxtx-types';
 
 declare const nxtx: Nxtx;
 
@@ -12,23 +11,18 @@ style.id = 'styling-style-block';
 document.head.appendChild(style);
 const sheet = <CSSStyleSheet> style.sheet;
 
-
-
-const pkg = {
+const pkg : Package = {
     name: 'styling',
     commands: {
-        'add-css-rule': (rule, index = 1) => sheet.insertRule(rule.value, index),
-        // @ts-ignore
-        'set-root-style': (prop, ...values) => document.querySelector('.nxtx-root').style.setProperty(prop, values.map(e => e.value).join(', ')),
+        'add-css-rule': (rule, index = { type: NodeType.Number, value: 1 }) => sheet.insertRule(rule.value, index.value) && undefined,
+        'set-root-style': (prop, ...values) => (<HTMLElement>document.querySelector('.nxtx-root')).style.setProperty(prop.value, values.map(e => e.value).join(', ')),
         'set-font-family': (...fontFamilies) => ({
             type: NodeType.Command,
             name: 'set-root-style',
-            args: ['font-family', ...fontFamilies]
+            args: [{ type: NodeType.String, value: 'font-family' }, ...fontFamilies]
         }),
         'set-local-font-family': (fontName, fontUrl) => {
-
             const css = `@font-face { font-family: '${fontName.value}'; src: local('${fontName.value}'), url('${fontUrl.value}'); }`;
-
             return ([
                 {
                     type: NodeType.Command,
@@ -38,7 +32,7 @@ const pkg = {
                 {
                     type: NodeType.Command,
                     name: 'set-root-style',
-                    args: ['font-family', fontName]
+                    args: [{ type: NodeType.String, value: 'font-family' }, fontName]
                 }
             ]);
         },
@@ -58,8 +52,6 @@ const pkg = {
     }
 };
 
-if (nxtx) {
-    Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
-}
+if (nxtx) nxtx.registerPackage(pkg);
 
 export default pkg;

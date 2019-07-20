@@ -36,5 +36,22 @@ export interface Package {
     requires?: Array<string>,
     commands?: { [name:string]: CommandFunction },
     preprocessors?: { [name:string]: CommandFunction },
-    hooks?: { [name:string]: Function }
+    hooks?: { prerender?: Function, postrender?: Function }
+}
+
+export interface Nxtx {
+    registerCommand: (cmd:string, fn:CommandFunction, overwrite?:boolean) => void
+    registerPreprocessor: (cmd:string, fn:CommandFunction, overwrite?:boolean) => void
+    verifyArguments: (types:Array<NodeType>, ...args:Array<Node>) => TypeCheck
+    registerPackage: (pkg:Package) => void
+
+    parse: (text:string) => Array<Node>
+    render: (text:string, root:HTMLElement) => Promise<void>
+
+    text: (content:string) => Text
+    htmlLite: (nodeName:string, attributes:object) => HTMLElement
+    html: (nodeName:string, attributes:object, ...children:Array<Promise<HTMLElement|Node|string>|HTMLElement|Node|string>) => Promise<HTMLElement>
+
+    on: (event:string, handler:Function) => void
+    off: (event:string, handler:Function) => void
 }

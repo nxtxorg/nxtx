@@ -4,8 +4,7 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import Nxtx from '../nxtx-interface';
-import { Package } from '../nxtx-types';
+import { Package, Nxtx } from '../nxtx-types';
 declare const nxtx: Nxtx;
 
 let acronyms = {};
@@ -37,10 +36,7 @@ const pkg : Package = {
     }
 };
 
-if (nxtx) {
-    Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
-    nxtx.on('prerender', pkg.hooks.prerender);
-}
+if (nxtx) nxtx.registerPackage(pkg);
 
 export default pkg;
 

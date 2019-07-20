@@ -2,8 +2,7 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import Nxtx from '../nxtx-interface';
-import {NodeType, Package} from '../nxtx-types';
+import {NodeType, Package, Nxtx} from '../nxtx-types';
 declare const nxtx: Nxtx;
 
 const pkg : Package = {
@@ -14,8 +13,6 @@ const pkg : Package = {
     }
 };
 
-if (nxtx) {
-    Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
-}
+if (nxtx) nxtx.registerPackage(pkg);
 
 export default pkg;

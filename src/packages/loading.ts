@@ -2,8 +2,7 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import Nxtx from '../nxtx-interface';
-import { Package } from '../nxtx-types';
+import { Package, Nxtx } from '../nxtx-types';
 declare const nxtx: Nxtx;
 
 let loaded = {
@@ -39,7 +38,7 @@ const pkg : Package = {
             if (loaded.packages[srcNode.value])
                 return acc();
             loaded.packages[srcNode.value] = true;
-            const script = document.createElement('script');
+            const script : HTMLScriptElement = document.createElement('script');
             script.src = srcNode.value;
             script.async = true;
             let done = false;
@@ -56,8 +55,6 @@ const pkg : Package = {
     }
 };
 
-if (nxtx) {
-    Object.keys(pkg.preprocessors).forEach(name => nxtx.registerPreprocessor(name, pkg.preprocessors[name]));
-}
+if (nxtx) nxtx.registerPackage(pkg);
 
 export default pkg;

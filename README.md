@@ -1,5 +1,5 @@
 # NxTx
-_a browser-friendly [LaTex](https://www.latex-project.org/)-inspired document preparation system_
+_a browser-friendly [LaTex](https://www.latex-project.org/) inspired document preparation system_
 
 <br/>
 
@@ -93,7 +93,7 @@ Some packages may only have preprocessors, such as the `loading`-package.
 ### Registering new commands
 Registering a new command is simple and only requires some JavaScript to be loaded:
 ```javascript
-nxtx.registerCommand('dquote', contentNode => `“${contentNode.value}”`);
+nxtx.registerCommand('dquote', contentNode => nxtx.text(`“${contentNode.value}”`));
 ```
 
 Commands can also be async (though it isn't necessary here):

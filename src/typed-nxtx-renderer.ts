@@ -6,8 +6,8 @@ import parser from './typed-nxtx-parser';
 import map from 'awaity/map';
 import mapSeries from 'awaity/mapSeries';
 import reduce from 'awaity/reduce';
-import { Node, NodeType, TypeCheck, CommandFunction, CommandResult } from "./nxtx-types";
-import Nxtx from "./nxtx-interface";
+import {Node, NodeType, TypeCheck, CommandFunction, CommandResult, Package, Nxtx} from "./nxtx-types";
+import pkg from "./packages/bibliography";
 
 const commands : { [key:string]:CommandFunction } = {};
 const preprocessors : { [key:string]:CommandFunction } = {};
@@ -36,6 +36,29 @@ const verifyArguments = (types:Array<NodeType>, ...args:Array<Node>) : TypeCheck
 };
 const parse = (text:string) : Array<Node> => parser.parse(text).map(mergeText);
 
+const registeredPackages = [];
+const registerPackage = (pkg:Package) => {
+    if (pkg.commands) {
+        Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
+    }
+    if (pkg.preprocessors) {
+        Object.keys(pkg.preprocessors).forEach(name => nxtx.registerPreprocessor(name, pkg.preprocessors[name]));
+    }
+    if (pkg.hooks) {
+        if (pkg.hooks.prerender)
+            on('prerender', pkg.hooks.prerender);
+        if (pkg.hooks.postrender)
+            on('postrender', pkg.hooks.postrender);
+    }
+
+    if (pkg.requires) {
+        pkg.requires.forEach(req => {
+            if (!registeredPackages.includes(req))
+                console.warn(`Package '${pkg.name}' requires '${req}' which has not been registered`);
+        });
+    }
+    registeredPackages.push(pkg.name);
+};
 
 
 const noMerge = { '.': true, ',': true };
@@ -175,6 +198,7 @@ const nxtx : Nxtx = {
     registerCommand,
     registerPreprocessor,
     verifyArguments,
+    registerPackage,
     parse,
     render,
     text,

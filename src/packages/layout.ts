@@ -2,8 +2,7 @@
     Author: Thomas Gwynfryn McCollin
     License: MIT */
 
-import Nxtx from '../nxtx-interface';
-import {NodeType, Package} from '../nxtx-types';
+import {NodeType, Package, Nxtx} from '../nxtx-types';
 declare const nxtx: Nxtx;
 
 const style = document.createElement("style");
@@ -53,9 +52,6 @@ const pkg : Package = {
     }
 };
 
-if (nxtx) {
-    Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
-    Object.keys(pkg.preprocessors).forEach(name => nxtx.registerPreprocessor(name, pkg.preprocessors[name]));
-}
+if (nxtx) nxtx.registerPackage(pkg);
 
 export default pkg;

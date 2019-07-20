@@ -4,8 +4,7 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import Nxtx from '../nxtx-interface';
-import {NodeType, Package} from '../nxtx-types';
+import {NodeType, Package, Nxtx} from '../nxtx-types';
 declare const nxtx: Nxtx;
 
 const entries = {};
@@ -45,7 +44,7 @@ const entryFieldFormatting = {
 
 nxtx.on('prerender', () => cited = []);
 
-const pkg = {
+const pkg : Package = {
     name: 'basic-formatting',
     commands: {
         'cite': async (...args) => {
@@ -63,6 +62,7 @@ const pkg = {
             cites.length -= 1;
             return nxtx.html('span', null, '[', ...cites, ']');
         },
+        // @ts-ignore
         'bib-print': async () => {
             const citedEntries = cited.map(e => entries[e] || console.warn(`Bibliography entry '${e}' not found`)).filter(f => !!f);
             if (citedEntries.length === 0) return console.warn('No bibliography entries cited (?)');
@@ -88,9 +88,7 @@ const pkg = {
     }
 };
 
-if (nxtx) {
-    Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
-    Object.keys(pkg.preprocessors).forEach(name => nxtx.registerPreprocessor(name, pkg.preprocessors[name]));
-}
+
+if (nxtx) nxtx.registerPackage(pkg);
 
 export default pkg;
