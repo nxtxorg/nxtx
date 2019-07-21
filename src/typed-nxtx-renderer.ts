@@ -6,59 +6,13 @@ import parser from './typed-nxtx-parser';
 import map from 'awaity/map';
 import mapSeries from 'awaity/mapSeries';
 import reduce from 'awaity/reduce';
-import {Node, NodeType, TypeCheck, CommandFunction, CommandResult, Package, Nxtx} from "./nxtx-types";
-
-const commands : { [key:string]:CommandFunction } = {};
-const preprocessors : { [key:string]:CommandFunction } = {};
-const executeCommand = async (cmd:string, args:Array<Node>) : Promise<CommandResult> => {
-    if (commands[cmd] !== undefined)
-        return await commands[cmd](...(await map(args, arg => arg.type === NodeType.Command ? executeCommand(arg.name, arg.args) : arg)));
-    console.warn(`Command '${cmd}' not registered`);
-    return await html('b', {class: "error"}, `${cmd}?`);
-};
+import {Node, NodeType, ArgumentCheckResult, CommandFunction, CommandResult, Package, INxtx} from "./nxtx-types";
 
 const register = (cmdCollection:object, cmd:string, fn: CommandFunction, overwrite:boolean = false) : void => {
     if (!overwrite && cmdCollection[cmd] !== undefined)
         return console.warn(`Command '${cmd}' is already registered. Set overwrite to true, if you need to overwrite the already registered command.`);
     cmdCollection[cmd] = fn;
 };
-
-const registerCommand = (cmd:string, fn:CommandFunction, overwrite?:boolean) : void => register(commands, cmd, fn, overwrite);
-
-const registerPreprocessor = (cmd:string, fn:CommandFunction, overwrite?:boolean) : void => register(preprocessors, cmd, fn, overwrite);
-
-const verifyArguments = (types:Array<NodeType>, ...args:Array<Node>) : TypeCheck => {
-    const invalidArguments = args
-        .map((actual:Node, index:number) => ({expected: types[index], actual: actual.type, index}))
-        .filter(type => type.expected !== type.actual);
-    return { ok: invalidArguments.length === 0, invalid: invalidArguments }
-};
-const parse = (text:string) : Array<Node> => parser.parse(text).map(mergeText);
-
-const registeredPackages = [];
-const registerPackage = (pkg:Package) => {
-    if (pkg.commands) {
-        Object.keys(pkg.commands).forEach(name => nxtx.registerCommand(name, pkg.commands[name]));
-    }
-    if (pkg.preprocessors) {
-        Object.keys(pkg.preprocessors).forEach(name => nxtx.registerPreprocessor(name, pkg.preprocessors[name]));
-    }
-    if (pkg.hooks) {
-        if (pkg.hooks.prerender)
-            on('prerender', pkg.hooks.prerender);
-        if (pkg.hooks.postrender)
-            on('postrender', pkg.hooks.postrender);
-    }
-
-    if (pkg.requires) {
-        pkg.requires.forEach(req => {
-            if (!registeredPackages.includes(req))
-                console.warn(`Package '${pkg.name}' requires '${req}' which has not been registered`);
-        });
-    }
-    registeredPackages.push(pkg.name);
-};
-
 
 const noMerge = { '.': true, ',': true };
 const mergeText = (paragraph:Node) : Node => {
@@ -88,28 +42,6 @@ const truthy = e => !!e;
 
 const flatMap = async (elements:Array<any>, fn:Function) : Promise<Array<any>> => (await map(elements, fn)).flat();
 const flatMapFilter = async (elements:Array<any>, fn:Function) : Promise<Array<any>> => (await map(elements, fn)).flat().filter(truthy);
-
-const baseRenderNode = async (node:Node|string|any) => {
-    if (typeof node === 'string') return text(node);
-    if (!node.type) return node;
-    switch (node.type) {
-        case NodeType.Node:
-            return node;
-        case NodeType.Paragraph:
-            const pNodes = await flatMap(node.value, baseRenderNode);
-            if (pNodes.length) pNodes.push(htmlLite('div', { class: 'meta paragraph-break' }));
-            return pNodes;
-        case NodeType.Html:
-            return htmlLite('span', { innerHTML: node.value });
-        case NodeType.Text:
-            return document.createTextNode(node.value);
-        case NodeType.Command:
-            // @ts-ignore
-            const result = [ await executeCommand(node.name, node.args) ].flat().filter(truthy);
-            return await flatMap(result, baseRenderNode)
-    }
-    console.error(node);
-};
 const flattenNodes = (nodes:Array<Node>) : Array<Node> => {
     let cleanParagraph;
     let requiresNew = true;
@@ -121,89 +53,154 @@ const flattenNodes = (nodes:Array<Node>) : Array<Node> => {
             cleanParagraph.value.push(current);
         }
         return flattened;
-        // @ts-ignore
     }, []).flat();
 };
 
-const executePreprocessor = async (node:Node) : Promise<CommandResult|Node> => {
-    if (node.type === NodeType.Command && preprocessors[node.name]) {
-        // @ts-ignore
-        const result = [ await preprocessors[node.name](...node.args) ].flat().filter(truthy);
-        const childResults = await flatMap(result, executePreprocessor);
-        if (commands[node.name] === undefined) return childResults;
+class Nxtx implements INxtx {
+    private hooks = { prerender: new Array<Function>(), postrender: new Array<Function>() };
+    private registeredPackages = new Array<string>();
+    private commands : { [key:string]:CommandFunction } = {};
+    private preprocessors : { [key:string]:CommandFunction } = {};
+
+    public registerCommand(cmd:string, fn:CommandFunction, overwrite?:boolean) : void {
+        return register(this.commands, cmd, fn, overwrite);
     }
-    else if (node.type === NodeType.Paragraph) {
-        node.value = await flatMapFilter(node.value, executePreprocessor);
+
+    public registerPreprocessor(cmd:string, fn:CommandFunction, overwrite?:boolean) : void {
+        return register(this.preprocessors, cmd, fn, overwrite);
     }
-    return node;
-};
-const executePreprocessors = async (paragraphs:Array<Node>) => {
-    return await reduce(paragraphs, async (processed, current) => {
-        const preprocessed = await flatMapFilter(current.value, executePreprocessor);
+
+    public verifyArguments(types:Array<NodeType>, ...args:Array<Node>) : ArgumentCheckResult {
+        const invalidArguments = args
+            .map((node, index) => ({expected: types[index], actual: node.type, index}))
+            .filter(type => type.expected !== type.actual);
+        return {ok: invalidArguments.length === 0, invalid: invalidArguments}
+    }
+
+    public parse(text:string) : Array<Node> {
+        return parser.parse(text).map(mergeText);
+    }
+
+    public registerPackage(pkg:Package) : void {
+        if (pkg.commands) {
+            Object.keys(pkg.commands).forEach(name => this.registerCommand(name, pkg.commands[name]));
+        }
+        if (pkg.preprocessors) {
+            Object.keys(pkg.preprocessors).forEach(name => this.registerPreprocessor(name, pkg.preprocessors[name]));
+        }
+        if (pkg.hooks) {
+            if (pkg.hooks.prerender)
+                this.on('prerender', pkg.hooks.prerender);
+            if (pkg.hooks.postrender)
+                this.on('postrender', pkg.hooks.postrender);
+        }
+
+        if (pkg.requires) {
+            pkg.requires.forEach(req => {
+                if (!this.registeredPackages.includes(req))
+                    console.warn(`Package '${pkg.name}' requires '${req}' which has not been registered`);
+            });
+        }
+        this.registeredPackages.push(pkg.name);
+    }
+
+    public async render(code:string, root:HTMLElement) : Promise<void> {
+        while (root.firstChild) root.removeChild(root.firstChild);
+        let page = 0, currentPage: HTMLElement;
+        const newPage = () => {
+            root.appendChild(currentPage = this.htmlLite('section', {id: `page-${++page}`, class: 'sheet', 'data-page': page}));
+            currentPage.appendChild(this.htmlLite('div', {class: 'meta page-start'}));
+        };
+        newPage();
+        const place = node => {
+            currentPage.appendChild(node);
+            if (currentPage.scrollHeight > currentPage.clientHeight) {
+                newPage();
+                currentPage.appendChild(node);
+            }
+        };
+        Nxtx.trigger(this.hooks.prerender);
+        let paragraphs = this.parse(code).map(mergeText);
+        const preprocessed = await this.executePreprocessors(paragraphs);
+        const rendered = await mapSeries(preprocessed, async (node: Node) => await this.baseRenderNode(node));
+        rendered.forEach(nodes => nodes.forEach(place));
+        Nxtx.trigger(this.hooks.postrender);
+    }
+
+    public text(content:string) {
+        return document.createTextNode(content);
+    }
+
+    public htmlLite(nodeName:string, attributes:object, ...children:Array<HTMLElement|string>) : HTMLElement{
+        let n = document.createElement(nodeName);
+        Object.keys(attributes || {}).forEach(k => n.setAttribute(k, attributes[k]));
+        children.forEach(c => typeof c === "string" ? n.appendChild(this.text(c)) : n.appendChild(c));
+        return n;
+    }
+
+    public async html(nodeName:string, attributes:{[key:string]:any}, ...children:Array<Promise<HTMLElement|Node|string>|HTMLElement|Node|string>) : Promise<HTMLElement> {
+        const n = this.htmlLite(nodeName, attributes);
+        for (let i = 0; i < children.length; i++) n.appendChild(await this.baseRenderNode(children[i]));
+        return n;
+    }
+
+    public on(event:string, handler:()=>void) : void {
+        if (!this.hooks[event].includes(handler)) this.hooks[event].push(handler);
+    }
+
+    public off(event:string, handler:()=>void) : void {
+        const index = this.hooks[event].indexOf(handler);
+        if (index !== -1) this.hooks[event].splice(index, 1);
+    }
+
+    private static trigger(subscribers: Function[]) : void {
+        return subscribers.forEach(fn => fn());
+    }
+
+    private baseRenderNode = async (node: Node | string | any) => {
+        if (typeof node === 'string') return this.text(node);
+        if (!node.type) return node;
+        switch (node.type) {
+            case NodeType.Node:
+                return node;
+            case NodeType.Paragraph:
+                const pNodes = await flatMap(node.value, this.baseRenderNode);
+                if (pNodes.length) pNodes.push(this.htmlLite('div', {class: 'meta paragraph-break'}));
+                return pNodes;
+            case NodeType.Html:
+                return this.htmlLite('span', {innerHTML: node.value});
+            case NodeType.Text:
+                return document.createTextNode(node.value);
+            case NodeType.Command:
+                const result = [await this.executeCommand(node.name, node.args)].flat().filter(truthy);
+                return await flatMap(result, this.baseRenderNode)
+        }
+        console.error(node);
+    };
+
+    private executeCommand = async (cmd:string, args:Array<Node>): Promise<CommandResult> => {
+        if (this.commands[cmd] !== undefined)
+            return await this.commands[cmd](...(await map(args, arg => arg.type === NodeType.Command ? this.executeCommand(arg.name, arg.args) : arg)));
+        console.warn(`Command '${cmd}' not registered`);
+        return await this.html('b', {class: "error"}, `${cmd}?`);
+    };
+
+    private executePreprocessor = async (node: Node): Promise<CommandResult | Node> => {
+        if (node.type === NodeType.Command && this.preprocessors[node.name]) {
+            const result = [await this.preprocessors[node.name](...node.args)].flat().filter(truthy);
+            const childResults = await flatMap(result, this.executePreprocessor);
+            if (this.commands[node.name] === undefined) return childResults;
+        } else if (node.type === NodeType.Paragraph) {
+            node.value = await flatMapFilter(node.value, this.executePreprocessor);
+        }
+        return node;
+    };
+
+    private executePreprocessors = async (paragraphs: Array<Node>): Promise<void> => await reduce(paragraphs, async (processed, current) => {
+        const preprocessed = await flatMapFilter(current.value, this.executePreprocessor.bind(this));
         processed.push(...flattenNodes(preprocessed));
         return processed;
     }, []);
-};
+}
 
-const render = async (text:string, root:HTMLElement) : Promise<void> => {
-    while (root.firstChild) root.removeChild(root.firstChild);
-    let page = 0, currentPage : HTMLElement;
-    const newPage = () => {
-        root.appendChild(currentPage = htmlLite('section', { id: `page-${++page}`, class: 'sheet', 'data-page': page }));
-        currentPage.appendChild(htmlLite('div', { class: 'meta page-start' }));
-    };
-    newPage();
-    const place = node => {
-        currentPage.appendChild(node);
-        if (currentPage.scrollHeight > currentPage.clientHeight) {
-            newPage();
-            currentPage.appendChild(node);
-        }
-    };
-    trigger('prerender');
-    let paragraphs = parse(text).map(mergeText);
-    const preprocessed = await executePreprocessors(paragraphs);
-    const rendered = await mapSeries(preprocessed, async (node:Node) => await baseRenderNode(node));
-    rendered.forEach(nodes => nodes.forEach(place));
-    trigger('postrender');
-};
-const text = (content:string) : Text => {
-    return document.createTextNode(content);
-};
-const htmlLite = (nodeName:string, attributes:object) : HTMLElement => {
-    let n = document.createElement(nodeName);
-    Object.keys(attributes || {}).forEach(k => n.setAttribute(k, attributes[k]));
-    return n;
-};
-
-
-const html = async (nodeName:string, attributes:object, ...children:Array<Promise<HTMLElement|Node|string>|HTMLElement|Node|string>) : Promise<HTMLElement> => {
-    const n = htmlLite(nodeName, attributes);
-    for (let i = 0; i < children.length; i++) n.appendChild(await baseRenderNode(children[i]));
-    return n;
-};
-
-const hooks = { prerender: [], postrender: [] };
-const trigger = (event:string) : void => (hooks[event] || []).forEach(fn => fn());
-const on = (event:string, handler:Function) : void => {
-    if (!hooks[event].includes(handler)) hooks[event].push(handler);
-};
-const off = (event:string, handler:Function) : void => {
-    const index = hooks[event].indexOf(handler);
-    if (index !== -1) hooks[event].splice(index, 1);
-};
-
-const nxtx : Nxtx = {
-    registerCommand,
-    registerPreprocessor,
-    verifyArguments,
-    registerPackage,
-    parse,
-    render,
-    text,
-    htmlLite,
-    html,
-    off,
-    on
-};
-export default nxtx;
+export default new Nxtx();
