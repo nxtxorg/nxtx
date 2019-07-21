@@ -1,4 +1,4 @@
-(function () {
+var nxtx_list_of_contents = (function () {
     'use strict';
 
     /*! *****************************************************************************
@@ -40,6 +40,7 @@
         NodeType[NodeType["Number"] = 13] = "Number";
         NodeType[NodeType["String"] = 14] = "String";
     })(NodeType || (NodeType = {}));
+    //# sourceMappingURL=nxtx-types.js.map
 
     var baseNumbering = {};
     var numbering = {};
@@ -52,27 +53,22 @@
     var registerPart = function (type, element) {
         baseNumbering[type] = 0;
         numbering = __assign({}, baseNumbering);
-        nxtx.registerPreprocessor(type, function (content) {
+        var obj = { preprocessor: {}, command: {} };
+        obj.preprocessor[type] = function (content) {
             numbering[type] += 1;
             resetChildrenNumbering(type);
             parts.push({ type: type, title: content.value, numbering: __assign({}, numbering) });
-        });
-        nxtx.registerCommand(type, function (content) { return nxtx.html(element, null, content.value); });
+        };
+        obj.command[type] = function (content) { return nxtx.html(element, null, content.value); };
+        return obj;
     };
-    [
+    var types = [
         ['chapter', 'h1'],
         ['section', 'h3'],
         ['subsection', 'h4'],
-    ].forEach(function (arr) { return registerPart(arr[0], arr[1]); });
-    nxtx.registerPreprocessor('label', function (ref) {
-        if (refs[ref.value] !== undefined)
-            console.warn("Attempt to redefine label '" + ref.value + "' ignored");
-        else
-            refs[ref.value] = parts[parts.length - 1];
-    });
-    nxtx.registerCommand('label', function (ref) {
-        return nxtx.html('span', { id: '--' + ref.value, 'data-label': ref.value });
-    });
+    ].map(function (arr) { return registerPart(arr[0], arr[1]); });
+    var preprocessors = Object.assign.apply(Object, [{}].concat(types.map(function (t) { return t.preprocessor; })));
+    var commands = Object.assign.apply(Object, [{}].concat(types.map(function (t) { return t.command; })));
     var resetChildrenNumbering = function (type) {
         var types = Object.keys(numbering);
         var reset = false;
@@ -105,28 +101,37 @@
         }
         return capitalize ? capitalizeStr(result) : result;
     };
-    nxtx.registerCommand('ref', function (ref) {
-        return nxtx.html('a', { href: "#--" + ref.value, 'data-ref': ref.value }, formatRef(ref.value, false));
-    });
-    nxtx.registerCommand('Ref', function (ref) {
-        return nxtx.html('a', { href: "#--" + ref.value, 'data-ref': ref.value }, formatRef(ref.value, true));
-    });
-    nxtx.registerCommand('loc-print', function () {
-        var rendition = [
-            nxtx.html('h2', { class: 'list-of-contents' }, 'List of Contents')
-        ].concat(parts.map(function (part) { return nxtx.html('div', { class: "loc-" + part.type }, formatNumbering(part.numbering) + " " + part.title); }), [
-            { type: NodeType.Command, name: 'pagebreak', args: [] }
-        ]);
-        return rendition;
-    });
-    nxtx.on('prerender', function () {
-        numbering = __assign({}, baseNumbering);
-        parts = [];
-        refs = {};
-    });
     sheet.insertRule('.loc-chapter { font-size: 14pt }', 0);
     sheet.insertRule('.loc-section { font-size: 13pt; padding-left: 2em }', 1);
     sheet.insertRule('.loc-subsection { font-size: 12pt; padding-left: 4em }', 2);
+    var pkg = {
+        name: 'images',
+        preprocessors: __assign({ 'label': function (ref) {
+                if (refs[ref.value] !== undefined)
+                    console.warn("Attempt to redefine label '" + ref.value + "' ignored");
+                else
+                    refs[ref.value] = parts[parts.length - 1];
+            } }, preprocessors),
+        commands: __assign({ 'label': function (ref) { return nxtx.html('span', { id: '--' + ref.value, 'data-label': ref.value }); }, 'ref': function (ref) { return nxtx.html('a', { href: "#--" + ref.value, 'data-ref': ref.value }, formatRef(ref.value, false)); }, 'Ref': function (ref) { return nxtx.html('a', { href: "#--" + ref.value, 'data-ref': ref.value }, formatRef(ref.value, true)); }, 'loc-print': function () {
+                var rendition = [
+                    nxtx.html('h2', { class: 'list-of-contents' }, 'List of Contents')
+                ].concat(parts.map(function (part) { return nxtx.html('div', { class: "loc-" + part.type }, formatNumbering(part.numbering) + " " + part.title); }), [
+                    { type: NodeType.Command, name: 'pagebreak', args: [] }
+                ]);
+                return rendition;
+            } }, commands),
+        hooks: {
+            prerender: function () {
+                numbering = __assign({}, baseNumbering);
+                parts = [];
+                refs = {};
+            }
+        }
+    };
+    if (nxtx)
+        nxtx.registerPackage(pkg);
+
+    return nxtx;
 
 }());
 //# sourceMappingURL=list-of-contents.js.map

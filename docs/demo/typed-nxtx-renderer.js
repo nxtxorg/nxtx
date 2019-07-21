@@ -2038,66 +2038,11 @@
     //# sourceMappingURL=nxtx-types.js.map
 
     var _this = undefined;
-    var commands = {};
-    var preprocessors = {};
-    var executeCommand = function (cmd, args) { return __awaiter(_this, void 0, void 0, function () {
-        var _a, _b, _c;
-        return __generator(this, function (_d) {
-            switch (_d.label) {
-                case 0:
-                    if (!(commands[cmd] !== undefined)) return [3, 3];
-                    _b = (_a = commands[cmd]).apply;
-                    _c = [commands];
-                    return [4, map(args, function (arg) { return arg.type === NodeType.Command ? executeCommand(arg.name, arg.args) : arg; })];
-                case 1: return [4, _b.apply(_a, _c.concat([(_d.sent())]))];
-                case 2: return [2, _d.sent()];
-                case 3:
-                    console.warn("Command '" + cmd + "' not registered");
-                    return [4, html('b', { class: "error" }, cmd + "?")];
-                case 4: return [2, _d.sent()];
-            }
-        });
-    }); };
     var register = function (cmdCollection, cmd, fn, overwrite) {
         if (overwrite === void 0) { overwrite = false; }
         if (!overwrite && cmdCollection[cmd] !== undefined)
             return console.warn("Command '" + cmd + "' is already registered. Set overwrite to true, if you need to overwrite the already registered command.");
         cmdCollection[cmd] = fn;
-    };
-    var registerCommand = function (cmd, fn, overwrite) { return register(commands, cmd, fn, overwrite); };
-    var registerPreprocessor = function (cmd, fn, overwrite) { return register(preprocessors, cmd, fn, overwrite); };
-    var verifyArguments = function (types) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        var invalidArguments = args
-            .map(function (actual, index) { return ({ expected: types[index], actual: actual.type, index: index }); })
-            .filter(function (type) { return type.expected !== type.actual; });
-        return { ok: invalidArguments.length === 0, invalid: invalidArguments };
-    };
-    var parse = function (text) { return parser$1.parse(text).map(mergeText); };
-    var registeredPackages = [];
-    var registerPackage = function (pkg) {
-        if (pkg.commands) {
-            Object.keys(pkg.commands).forEach(function (name) { return nxtx.registerCommand(name, pkg.commands[name]); });
-        }
-        if (pkg.preprocessors) {
-            Object.keys(pkg.preprocessors).forEach(function (name) { return nxtx.registerPreprocessor(name, pkg.preprocessors[name]); });
-        }
-        if (pkg.hooks) {
-            if (pkg.hooks.prerender)
-                on('prerender', pkg.hooks.prerender);
-            if (pkg.hooks.postrender)
-                on('postrender', pkg.hooks.postrender);
-        }
-        if (pkg.requires) {
-            pkg.requires.forEach(function (req) {
-                if (!registeredPackages.includes(req))
-                    console.warn("Package '" + pkg.name + "' requires '" + req + "' which has not been registered");
-            });
-        }
-        registeredPackages.push(pkg.name);
     };
     var noMerge = { '.': true, ',': true };
     var mergeText = function (paragraph) {
@@ -2138,44 +2083,6 @@
             case 1: return [2, (_a.sent()).flat().filter(truthy)];
         }
     }); }); };
-    var baseRenderNode = function (node) { return __awaiter(_this, void 0, void 0, function () {
-        var _a, pNodes, result;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0:
-                    if (typeof node === 'string')
-                        return [2, text(node)];
-                    if (!node.type)
-                        return [2, node];
-                    _a = node.type;
-                    switch (_a) {
-                        case NodeType.Node: return [3, 1];
-                        case NodeType.Paragraph: return [3, 2];
-                        case NodeType.Html: return [3, 4];
-                        case NodeType.Text: return [3, 5];
-                        case NodeType.Command: return [3, 6];
-                    }
-                    return [3, 9];
-                case 1: return [2, node];
-                case 2: return [4, flatMap(node.value, baseRenderNode)];
-                case 3:
-                    pNodes = _b.sent();
-                    if (pNodes.length)
-                        pNodes.push(htmlLite('div', { class: 'meta paragraph-break' }));
-                    return [2, pNodes];
-                case 4: return [2, htmlLite('span', { innerHTML: node.value })];
-                case 5: return [2, document.createTextNode(node.value)];
-                case 6: return [4, executeCommand(node.name, node.args)];
-                case 7:
-                    result = [_b.sent()].flat().filter(truthy);
-                    return [4, flatMap(result, baseRenderNode)];
-                case 8: return [2, _b.sent()];
-                case 9:
-                    console.error(node);
-                    return [2];
-            }
-        });
-    }); };
     var flattenNodes = function (nodes) {
         var cleanParagraph;
         var requiresNew = true;
@@ -2190,154 +2097,261 @@
             return flattened;
         }, []).flat();
     };
-    var executePreprocessor = function (node) { return __awaiter(_this, void 0, void 0, function () {
-        var result, childResults, _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0:
-                    if (!(node.type === NodeType.Command && preprocessors[node.name])) return [3, 3];
-                    return [4, preprocessors[node.name].apply(preprocessors, node.args)];
-                case 1:
-                    result = [_b.sent()].flat().filter(truthy);
-                    return [4, flatMap(result, executePreprocessor)];
-                case 2:
-                    childResults = _b.sent();
-                    if (commands[node.name] === undefined)
-                        return [2, childResults];
-                    return [3, 5];
-                case 3:
-                    if (!(node.type === NodeType.Paragraph)) return [3, 5];
-                    _a = node;
-                    return [4, flatMapFilter(node.value, executePreprocessor)];
-                case 4:
-                    _a.value = _b.sent();
-                    _b.label = 5;
-                case 5: return [2, node];
-            }
-        });
-    }); };
-    var executePreprocessors = function (paragraphs) { return __awaiter(_this, void 0, void 0, function () {
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4, reduce(paragraphs, function (processed, current) { return __awaiter(_this, void 0, void 0, function () {
-                        var preprocessed;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0: return [4, flatMapFilter(current.value, executePreprocessor)];
-                                case 1:
-                                    preprocessed = _a.sent();
-                                    processed.push.apply(processed, flattenNodes(preprocessed));
-                                    return [2, processed];
+    var Nxtx = (function () {
+        function Nxtx() {
+            var _this = this;
+            this.hooks = { prerender: new Array(), postrender: new Array() };
+            this.registeredPackages = new Array();
+            this.commands = {};
+            this.preprocessors = {};
+            this.baseRenderNode = function (node) { return __awaiter(_this, void 0, void 0, function () {
+                var _a, pNodes, result;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            if (typeof node === 'string')
+                                return [2, this.text(node)];
+                            if (!node.type)
+                                return [2, node];
+                            _a = node.type;
+                            switch (_a) {
+                                case NodeType.Node: return [3, 1];
+                                case NodeType.Paragraph: return [3, 2];
+                                case NodeType.Html: return [3, 4];
+                                case NodeType.Text: return [3, 5];
+                                case NodeType.Command: return [3, 6];
                             }
-                        });
-                    }); }, [])];
-                case 1: return [2, _a.sent()];
-            }
-        });
-    }); };
-    var render = function (text, root) { return __awaiter(_this, void 0, void 0, function () {
-        var page, currentPage, newPage, place, paragraphs, preprocessed, rendered;
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    while (root.firstChild)
-                        root.removeChild(root.firstChild);
-                    page = 0;
-                    newPage = function () {
-                        root.appendChild(currentPage = htmlLite('section', { id: "page-" + ++page, class: 'sheet', 'data-page': page }));
-                        currentPage.appendChild(htmlLite('div', { class: 'meta page-start' }));
-                    };
-                    newPage();
-                    place = function (node) {
-                        currentPage.appendChild(node);
-                        if (currentPage.scrollHeight > currentPage.clientHeight) {
-                            newPage();
-                            currentPage.appendChild(node);
-                        }
-                    };
-                    trigger('prerender');
-                    paragraphs = parse(text).map(mergeText);
-                    return [4, executePreprocessors(paragraphs)];
-                case 1:
-                    preprocessed = _a.sent();
-                    return [4, mapSeries(preprocessed, function (node) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0: return [4, baseRenderNode(node)];
-                                case 1: return [2, _a.sent()];
-                            }
-                        }); }); })];
-                case 2:
-                    rendered = _a.sent();
-                    rendered.forEach(function (nodes) { return nodes.forEach(place); });
-                    trigger('postrender');
-                    return [2];
-            }
-        });
-    }); };
-    var text = function (content) {
-        return document.createTextNode(content);
-    };
-    var htmlLite = function (nodeName, attributes) {
-        var n = document.createElement(nodeName);
-        Object.keys(attributes || {}).forEach(function (k) { return n.setAttribute(k, attributes[k]); });
-        return n;
-    };
-    var html = function (nodeName, attributes) {
-        var children = [];
-        for (var _i = 2; _i < arguments.length; _i++) {
-            children[_i - 2] = arguments[_i];
+                            return [3, 9];
+                        case 1: return [2, node];
+                        case 2: return [4, flatMap(node.value, this.baseRenderNode)];
+                        case 3:
+                            pNodes = _b.sent();
+                            if (pNodes.length)
+                                pNodes.push(this.htmlLite('div', { class: 'meta paragraph-break' }));
+                            return [2, pNodes];
+                        case 4: return [2, this.htmlLite('span', { innerHTML: node.value })];
+                        case 5: return [2, document.createTextNode(node.value)];
+                        case 6: return [4, this.executeCommand(node.name, node.args)];
+                        case 7:
+                            result = [_b.sent()].flat().filter(truthy);
+                            return [4, flatMap(result, this.baseRenderNode)];
+                        case 8: return [2, _b.sent()];
+                        case 9:
+                            console.error(node);
+                            return [2];
+                    }
+                });
+            }); };
+            this.executeCommand = function (cmd, args) { return __awaiter(_this, void 0, void 0, function () {
+                var _a, _b, _c;
+                var _d;
+                var _this = this;
+                return __generator(this, function (_e) {
+                    switch (_e.label) {
+                        case 0:
+                            if (!(this.commands[cmd] !== undefined)) return [3, 3];
+                            _b = (_a = (_d = this.commands)[cmd]).apply;
+                            _c = [_d];
+                            return [4, map(args, function (arg) { return arg.type === NodeType.Command ? _this.executeCommand(arg.name, arg.args) : arg; })];
+                        case 1: return [4, _b.apply(_a, _c.concat([(_e.sent())]))];
+                        case 2: return [2, _e.sent()];
+                        case 3:
+                            console.warn("Command '" + cmd + "' not registered");
+                            return [4, this.html('b', { class: "error" }, cmd + "?")];
+                        case 4: return [2, _e.sent()];
+                    }
+                });
+            }); };
+            this.executePreprocessor = function (node) { return __awaiter(_this, void 0, void 0, function () {
+                var result, childResults, _a;
+                var _b;
+                return __generator(this, function (_c) {
+                    switch (_c.label) {
+                        case 0:
+                            if (!(node.type === NodeType.Command && this.preprocessors[node.name])) return [3, 3];
+                            return [4, (_b = this.preprocessors)[node.name].apply(_b, node.args)];
+                        case 1:
+                            result = [_c.sent()].flat().filter(truthy);
+                            return [4, flatMap(result, this.executePreprocessor)];
+                        case 2:
+                            childResults = _c.sent();
+                            if (this.commands[node.name] === undefined)
+                                return [2, childResults];
+                            return [3, 5];
+                        case 3:
+                            if (!(node.type === NodeType.Paragraph)) return [3, 5];
+                            _a = node;
+                            return [4, flatMapFilter(node.value, this.executePreprocessor)];
+                        case 4:
+                            _a.value = _c.sent();
+                            _c.label = 5;
+                        case 5: return [2, node];
+                    }
+                });
+            }); };
+            this.executePreprocessors = function (paragraphs) { return __awaiter(_this, void 0, void 0, function () {
+                var _this = this;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4, reduce(paragraphs, function (processed, current) { return __awaiter(_this, void 0, void 0, function () {
+                                var preprocessed;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4, flatMapFilter(current.value, this.executePreprocessor.bind(this))];
+                                        case 1:
+                                            preprocessed = _a.sent();
+                                            processed.push.apply(processed, flattenNodes(preprocessed));
+                                            return [2, processed];
+                                    }
+                                });
+                            }); }, [])];
+                        case 1: return [2, _a.sent()];
+                    }
+                });
+            }); };
         }
-        return __awaiter(_this, void 0, void 0, function () {
-            var n, i, _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        n = htmlLite(nodeName, attributes);
-                        i = 0;
-                        _c.label = 1;
-                    case 1:
-                        if (!(i < children.length)) return [3, 4];
-                        _b = (_a = n).appendChild;
-                        return [4, baseRenderNode(children[i])];
-                    case 2:
-                        _b.apply(_a, [_c.sent()]);
-                        _c.label = 3;
-                    case 3:
-                        i++;
-                        return [3, 1];
-                    case 4: return [2, n];
-                }
+        Nxtx.prototype.registerCommand = function (cmd, fn, overwrite) {
+            return register(this.commands, cmd, fn, overwrite);
+        };
+        Nxtx.prototype.registerPreprocessor = function (cmd, fn, overwrite) {
+            return register(this.preprocessors, cmd, fn, overwrite);
+        };
+        Nxtx.prototype.verifyArguments = function (types) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            var invalidArguments = args
+                .map(function (node, index) { return ({ expected: types[index], actual: node.type, index: index }); })
+                .filter(function (type) { return type.expected !== type.actual; });
+            return { ok: invalidArguments.length === 0, invalid: invalidArguments };
+        };
+        Nxtx.prototype.parse = function (text) {
+            return parser$1.parse(text).map(mergeText);
+        };
+        Nxtx.prototype.registerPackage = function (pkg) {
+            var _this = this;
+            if (pkg.commands) {
+                Object.keys(pkg.commands).forEach(function (name) { return _this.registerCommand(name, pkg.commands[name]); });
+            }
+            if (pkg.preprocessors) {
+                Object.keys(pkg.preprocessors).forEach(function (name) { return _this.registerPreprocessor(name, pkg.preprocessors[name]); });
+            }
+            if (pkg.hooks) {
+                if (pkg.hooks.prerender)
+                    this.on('prerender', pkg.hooks.prerender);
+                if (pkg.hooks.postrender)
+                    this.on('postrender', pkg.hooks.postrender);
+            }
+            if (pkg.requires) {
+                pkg.requires.forEach(function (req) {
+                    if (!_this.registeredPackages.includes(req))
+                        console.warn("Package '" + pkg.name + "' requires '" + req + "' which has not been registered");
+                });
+            }
+            this.registeredPackages.push(pkg.name);
+        };
+        Nxtx.prototype.render = function (code, root) {
+            return __awaiter(this, void 0, void 0, function () {
+                var page, currentPage, newPage, place, paragraphs, preprocessed, rendered;
+                var _this = this;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            while (root.firstChild)
+                                root.removeChild(root.firstChild);
+                            page = 0;
+                            newPage = function () {
+                                root.appendChild(currentPage = _this.htmlLite('section', { id: "page-" + ++page, class: 'sheet', 'data-page': page }));
+                                currentPage.appendChild(_this.htmlLite('div', { class: 'meta page-start' }));
+                            };
+                            newPage();
+                            place = function (node) {
+                                currentPage.appendChild(node);
+                                if (currentPage.scrollHeight > currentPage.clientHeight) {
+                                    newPage();
+                                    currentPage.appendChild(node);
+                                }
+                            };
+                            Nxtx.trigger(this.hooks.prerender);
+                            paragraphs = this.parse(code).map(mergeText);
+                            return [4, this.executePreprocessors(paragraphs)];
+                        case 1:
+                            preprocessed = _a.sent();
+                            return [4, mapSeries(preprocessed, function (node) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4, this.baseRenderNode(node)];
+                                        case 1: return [2, _a.sent()];
+                                    }
+                                }); }); })];
+                        case 2:
+                            rendered = _a.sent();
+                            rendered.forEach(function (nodes) { return nodes.forEach(place); });
+                            Nxtx.trigger(this.hooks.postrender);
+                            return [2];
+                    }
+                });
             });
-        });
-    };
-    var hooks = { prerender: [], postrender: [] };
-    var trigger = function (event) { return (hooks[event] || []).forEach(function (fn) { return fn(); }); };
-    var on = function (event, handler) {
-        if (!hooks[event].includes(handler))
-            hooks[event].push(handler);
-    };
-    var off = function (event, handler) {
-        var index = hooks[event].indexOf(handler);
-        if (index !== -1)
-            hooks[event].splice(index, 1);
-    };
-    var nxtx = {
-        registerCommand: registerCommand,
-        registerPreprocessor: registerPreprocessor,
-        verifyArguments: verifyArguments,
-        registerPackage: registerPackage,
-        parse: parse,
-        render: render,
-        text: text,
-        htmlLite: htmlLite,
-        html: html,
-        off: off,
-        on: on
-    };
+        };
+        Nxtx.prototype.text = function (content) {
+            return document.createTextNode(content);
+        };
+        Nxtx.prototype.htmlLite = function (nodeName, attributes) {
+            var _this = this;
+            var children = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                children[_i - 2] = arguments[_i];
+            }
+            var n = document.createElement(nodeName);
+            Object.keys(attributes || {}).forEach(function (k) { return n.setAttribute(k, attributes[k]); });
+            children.forEach(function (c) { return typeof c === "string" ? n.appendChild(_this.text(c)) : n.appendChild(c); });
+            return n;
+        };
+        Nxtx.prototype.html = function (nodeName, attributes) {
+            var children = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                children[_i - 2] = arguments[_i];
+            }
+            return __awaiter(this, void 0, void 0, function () {
+                var n, i, _a, _b;
+                return __generator(this, function (_c) {
+                    switch (_c.label) {
+                        case 0:
+                            n = this.htmlLite(nodeName, attributes);
+                            i = 0;
+                            _c.label = 1;
+                        case 1:
+                            if (!(i < children.length)) return [3, 4];
+                            _b = (_a = n).appendChild;
+                            return [4, this.baseRenderNode(children[i])];
+                        case 2:
+                            _b.apply(_a, [_c.sent()]);
+                            _c.label = 3;
+                        case 3:
+                            i++;
+                            return [3, 1];
+                        case 4: return [2, n];
+                    }
+                });
+            });
+        };
+        Nxtx.prototype.on = function (event, handler) {
+            if (!this.hooks[event].includes(handler))
+                this.hooks[event].push(handler);
+        };
+        Nxtx.prototype.off = function (event, handler) {
+            var index = this.hooks[event].indexOf(handler);
+            if (index !== -1)
+                this.hooks[event].splice(index, 1);
+        };
+        Nxtx.trigger = function (subscribers) {
+            return subscribers.forEach(function (fn) { return fn(); });
+        };
+        return Nxtx;
+    }());
+    var typedNxtxRenderer = new Nxtx();
 
-    return nxtx;
+    return typedNxtxRenderer;
 
 }));
 //# sourceMappingURL=typed-nxtx-renderer.js.map

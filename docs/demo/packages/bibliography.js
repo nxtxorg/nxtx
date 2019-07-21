@@ -109,6 +109,10 @@ var nxtx_bibliography = (function () {
                     var cites;
                     return __generator(this, function (_a) {
                         cites = args.flatMap(function (arg) {
+                            if (!entries[arg.value]) {
+                                console.warn("Bibliography entry '" + arg.value + "' was not found");
+                                return [arg.value + "?", ', '];
+                            }
                             var index = cited.indexOf(arg.value);
                             if (index === -1) {
                                 cited.push(arg.value);
@@ -124,12 +128,11 @@ var nxtx_bibliography = (function () {
                 });
             },
             'bib-print': function () { return __awaiter(_this, void 0, void 0, function () {
-                var citedEntries, mapped;
+                var mapped;
                 return __generator(this, function (_a) {
-                    citedEntries = cited.map(function (e) { return entries[e] || console.warn("Bibliography entry '" + e + "' not found"); }).filter(function (f) { return !!f; });
-                    if (citedEntries.length === 0)
-                        return [2, console.warn('No bibliography entries cited (?)')];
-                    mapped = citedEntries.map(function (entryFields, number) { return nxtx.html.apply(nxtx, ['div', { id: "---" + cited[number], class: 'bib bib-entry' },
+                    mapped = cited
+                        .map(function (e) { return entries[e]; })
+                        .map(function (entryFields, number) { return nxtx.html.apply(nxtx, ['div', { id: "---" + cited[number], class: 'bib bib-entry' },
                         nxtx.html('span', { class: 'bib bib-ordering' }, "[" + (number + 1) + "]")].concat(Object.keys(entryFieldFormatting)
                         .filter(function (k) { return entryFields[k] !== undefined; })
                         .map(function (k) { return entryFieldFormatting[k](entryFields[k]); }))); });

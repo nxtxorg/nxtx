@@ -172,7 +172,6 @@ var nxtx_core = (function () {
                             lastModified = response.headers.get('last-modified');
                             cached = loaded.documents[filename];
                             if (lastModified && cached && cached.lastModified === lastModified) {
-                                console.log('using cached', filename);
                                 return [2, loaded.documents[filename].nodes];
                             }
                             return [4, response.text()];
@@ -187,6 +186,7 @@ var nxtx_core = (function () {
                 });
             }); },
             'load:package': function (srcNode) { return new Promise(function (acc, rej) {
+                var argsOk = nxtx.verifyArguments([], srcNode);
                 if (loaded.packages[srcNode.value])
                     return acc();
                 loaded.packages[srcNode.value] = true;
@@ -290,6 +290,7 @@ var nxtx_core = (function () {
         loading: pkg$3,
         styling: pkg$4
     };
+    //# sourceMappingURL=core.js.map
 
     return core;
 
