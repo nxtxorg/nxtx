@@ -2,8 +2,8 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import { Package, Nxtx } from '../nxtx-types';
-declare const nxtx: Nxtx;
+import { Package, INxtx } from '../nxtx-types';
+declare const nxtx: INxtx;
 
 let loaded = {
     documents: {},
@@ -22,7 +22,6 @@ const pkg : Package = {
             const lastModified = response.headers.get('last-modified');
             const cached = loaded.documents[filename];
             if (lastModified && cached && cached.lastModified === lastModified) {
-                console.log('using cached', filename);
                 return loaded.documents[filename].nodes;
             }
 
@@ -35,6 +34,7 @@ const pkg : Package = {
         },
 
         'load:package': srcNode => new Promise((acc, rej) => {
+            const argsOk = nxtx.verifyArguments([], srcNode);
             if (loaded.packages[srcNode.value])
                 return acc();
             loaded.packages[srcNode.value] = true;

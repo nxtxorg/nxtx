@@ -4,8 +4,8 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import {NodeType, Package, Nxtx} from '../nxtx-types';
-declare const nxtx: Nxtx;
+import {NodeType, Package, INxtx} from '../nxtx-types';
+declare const nxtx: INxtx;
 
 const entries = {};
 let cited = [];
@@ -48,8 +48,11 @@ const pkg : Package = {
     name: 'basic-formatting',
     commands: {
         'cite': async (...args) => {
-            // @ts-ignore
             const cites = args.flatMap(arg => {
+                if (!entries[arg.value]) {
+                    console.warn(`Bibliography entry '${arg.value}' was not found`);
+                    return [ `${arg.value}?`, ', '];
+                }
                 let index = cited.indexOf(arg.value);
                 if (index === -1) {
                     cited.push(arg.value);
@@ -64,14 +67,13 @@ const pkg : Package = {
         },
         // @ts-ignore
         'bib-print': async () => {
-            const citedEntries = cited.map(e => entries[e] || console.warn(`Bibliography entry '${e}' not found`)).filter(f => !!f);
-            if (citedEntries.length === 0) return console.warn('No bibliography entries cited (?)');
-
-            const mapped = citedEntries.map((entryFields, number) => nxtx.html('div', { id: `---${cited[number]}`, class: 'bib bib-entry'},
-                nxtx.html('span', { class: 'bib bib-ordering'}, `[${number + 1}]`),
-                ...Object.keys(entryFieldFormatting)
-                    .filter(k => entryFields[k] !== undefined)
-                    .map(k => entryFieldFormatting[k](entryFields[k]))
+            const mapped = cited
+                .map(e => entries[e])
+                .map((entryFields, number) => nxtx.html('div', { id: `---${cited[number]}`, class: 'bib bib-entry'},
+                    nxtx.html('span', { class: 'bib bib-ordering'}, `[${number + 1}]`),
+                    ...Object.keys(entryFieldFormatting)
+                        .filter(k => entryFields[k] !== undefined)
+                        .map(k => entryFieldFormatting[k](entryFields[k]))
             ));
             return [
                 { type: NodeType.Command, name: 'pagebreak', args: [] },

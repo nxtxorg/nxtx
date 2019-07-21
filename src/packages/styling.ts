@@ -2,9 +2,9 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import {NodeType, Nxtx, Package} from '../nxtx-types';
+import {NodeType, INxtx, Package} from '../nxtx-types';
 
-declare const nxtx: Nxtx;
+declare const nxtx: INxtx;
 
 const style = document.createElement("style");
 style.id = 'styling-style-block';

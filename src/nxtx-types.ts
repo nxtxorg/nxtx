@@ -22,36 +22,37 @@ export interface ArgumentCheck {
     actual: NodeType,
     index: number
 }
-export interface TypeCheck {
+export interface ArgumentCheckResult {
     ok: boolean,
     invalid: Array<ArgumentCheck>
 }
 
-type CommandResultType = Node | HTMLElement | Text | undefined | void
+type CommandResultTypes = Node | HTMLElement | Text | undefined | void
+type CommandResultType = Promise<CommandResultTypes> | CommandResultTypes
 export type CommandResult = Array<CommandResultType> | CommandResultType
-export type CommandFunction = (...args:Array<Node>) => Promise<CommandResult> | CommandResult
+export type CommandFunction = (...args:Array<Node>) => CommandResult
 
 export interface Package {
     name: string,
     requires?: Array<string>,
     commands?: { [name:string]: CommandFunction },
     preprocessors?: { [name:string]: CommandFunction },
-    hooks?: { prerender?: Function, postrender?: Function }
+    hooks?: { prerender?:()=>void, postrender?:()=>void }
 }
 
-export interface Nxtx {
+export interface INxtx {
     registerCommand: (cmd:string, fn:CommandFunction, overwrite?:boolean) => void
     registerPreprocessor: (cmd:string, fn:CommandFunction, overwrite?:boolean) => void
-    verifyArguments: (types:Array<NodeType>, ...args:Array<Node>) => TypeCheck
+    verifyArguments: (types:Array<NodeType>, ...args:Array<Node>) => ArgumentCheckResult
     registerPackage: (pkg:Package) => void
 
-    parse: (text:string) => Array<Node>
-    render: (text:string, root:HTMLElement) => Promise<void>
+    parse: (code:string) => Array<Node>
+    render: (code:string, root:HTMLElement) => Promise<void>
 
     text: (content:string) => Text
-    htmlLite: (nodeName:string, attributes:object) => HTMLElement
+    htmlLite: (nodeName:string, attributes:object, ...children:Array<HTMLElement|string>) => HTMLElement
     html: (nodeName:string, attributes:object, ...children:Array<Promise<HTMLElement|Node|string>|HTMLElement|Node|string>) => Promise<HTMLElement>
 
-    on: (event:string, handler:Function) => void
-    off: (event:string, handler:Function) => void
+    on: (event:string, handler:()=>void) => void
+    off: (event:string, handler:()=>void) => void
 }

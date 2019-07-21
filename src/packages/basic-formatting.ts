@@ -2,8 +2,8 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import { Package, Nxtx } from '../nxtx-types';
-declare const nxtx: Nxtx;
+import { Package, INxtx } from '../nxtx-types';
+declare const nxtx: INxtx;
 
 const style = document.createElement("style");
 style.id = 'basic-formatting-style-block';

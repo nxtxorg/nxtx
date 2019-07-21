@@ -2,8 +2,8 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import {NodeType, Package, Nxtx} from '../nxtx-types';
-declare const nxtx: Nxtx;
+import {NodeType, Package, INxtx} from '../nxtx-types';
+declare const nxtx: INxtx;
 
 const pkg : Package = {
     name: 'images',

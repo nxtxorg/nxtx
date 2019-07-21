@@ -4,8 +4,8 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import { Package, Nxtx } from '../nxtx-types';
-declare const nxtx: Nxtx;
+import { Package, INxtx } from '../nxtx-types';
+declare const nxtx: INxtx;
 
 let acronyms = {};
 let usedAcronyms = [];

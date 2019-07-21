@@ -3,12 +3,13 @@
     "target": "es5",
     "sourceMap": true,
     "removeComments": true,
-    "noLib": false
+    "noLib": false,
+    "lib": [
+      "dom",
+      "es6",
+      "esnext.array"
+    ]
   },
-  "lib": [
-    "dom",
-    "es6"
-  ],
   "include": [
     "src/**/*.ts"
   ],
