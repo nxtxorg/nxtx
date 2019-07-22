@@ -14,10 +14,10 @@ NxTx eliminates all the issues mentioned above by being completely browser-based
 
 <br/>
 
-The base (parser & renderer) is minimal and designed to be extended through packages written in JavaScript (see build/libs)
+The base (parser & renderer) is minimal and designed to be extended through packages written in TypeScript (see build/libs)
 
 - The parser is built using [PEG.js](https://github.com/pegjs/pegjs) and the grammar is currently quite tiny (~50 lines)
-- The renderer is implemented in JavaScript and relies on DOM elements
+- The renderer is implemented in TypeScript and relies on DOM elements
   - [paper-css](https://github.com/cognitom/paper-css) classes are used and is relied on for basic styling
   
   
