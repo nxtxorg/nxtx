@@ -3,6 +3,17 @@ _a browser-friendly [LaTex](https://www.latex-project.org/) inspired document pr
 
 <br/>
 
+## What and Why?
+NxTx is a DSL with a syntax and purpose inspired by LaTex. NxTx comes with a browser-based parser and renderer, that is focused on redering the exact same layout as when using the inbuilt Print-to-PDF of the browser. The goal is to enable quick in-browser rendering of the NxTx-content, and when it is needed to obtain a PDF version of the document for distribution, it can simply be printed through the browser, resulting in a PDF that looks exactly the same as what is shown in the browser.
+
+I have enjoyed using LaTeX because of it's plain-text approach as opposed the WYSIWYG approaches (Word, Google Docs, ...).
+But when you need to create a document collaboratively with fellow students or co-workers, something more geared towards "real-time" collaboration is needed. 
+There exists solutions that enable collaborative LaTeX work to be done "real-time" in a browser, but compiling the LaTeX content often takes a long time, from my experience writing reports at the university. Furthermore, as these solutions rely on server-side rendering of the documents, compilation gets much slower when using these solutions when many other users are compiling their documents at the same time. This always became very annoying around the time of exams, as all students at the institute used the same online solution. As did many other students world-wide and this resulted in compile-times of several minutes which completely ruined productivity. 
+
+NxTx eliminates all the issues mentioned above by being completely browser-based. All parsing and rendering is done at the client-side, directly in the browser. NxTx and it's package-system is designed for the browser. Nxtx (currently) doesn't include a server for synchronizing the edited files. It is easy to create packages for Nxtx in either JavaScript and TypeScript, and the packages can be loaded from any static file host making it easy to distribute trough GitHub Pages or CDNs.
+
+<br/>
+
 The base (parser & renderer) is minimal and designed to be extended through packages written in JavaScript (see build/libs)
 
 - The parser is built using [PEG.js](https://github.com/pegjs/pegjs) and the grammar is currently quite tiny (~50 lines)
@@ -10,8 +21,6 @@ The base (parser & renderer) is minimal and designed to be extended through pack
   - [paper-css](https://github.com/cognitom/paper-css) classes are used and is relied on for basic styling
   
   
-The main idea is that the rendered document is laid out just like it will look when using the browsers inbuilt print functionality,
-so a PDF version easily can be created.
 
 NxTx uses __two-pass__ rendering; the first pass executes preprocessors and 
 second pass executes commands and renders everything. The reason that two passes are necessary, 
