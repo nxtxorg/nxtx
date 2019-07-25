@@ -1,8 +1,7 @@
 {
   "name": "nxtx",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "a browser-friendly LaTex-inspired document preparation system",
-  "main": "index.js",
   "author": "Malte Rosenbjerg",
   "license": "MIT",
   "devDependencies": {
@@ -17,8 +16,7 @@
   },
   "scripts": {
     "build": "rollup --config rollup.config.js --environment NODE_ENV:production",
-    "dev": "rollup --watch --config rollup.config.js --environment NODE_ENV:development",
-    "editor": "electron ./electron-editor"
+    "dev": "rollup --watch --config rollup.config.js --environment NODE_ENV:development"
   },
   "dependencies": {
     "awaity": "^1.0.0"

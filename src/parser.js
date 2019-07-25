@@ -1,2 +1,2 @@
-import parser from '../grammar.pegjs';
+import parser from './grammar.pegjs';
 export default parser;
