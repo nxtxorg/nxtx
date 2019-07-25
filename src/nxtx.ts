@@ -2,31 +2,43 @@
     Author: Malte Rosenbjerg
     License: MIT */
 
-import parser from './typed-nxtx-parser';
+import * as pegparser from './nxtx-parser.js';
+import { Parser } from "pegjs";
+const parser : Parser = pegparser.default;
+
 import map from 'awaity/map';
 import mapSeries from 'awaity/mapSeries';
 import reduce from 'awaity/reduce';
-import {Node, NodeType, ArgumentCheckResult, CommandFunction, CommandResult, Package, INxtx} from "./nxtx-types";
+import {
+    ArgumentCheckResult,
+    CommandFunction,
+    CommandResult,
+    INxtx,
+    Node,
+    NodeType,
+    Package,
+    RenderEvent
+} from "./index";
 
-const register = (cmdCollection:object, cmd:string, fn: CommandFunction, overwrite:boolean = false) : void => {
+
+const register = (cmdCollection: object, cmd: string, fn: CommandFunction, overwrite: boolean = false): void => {
     if (!overwrite && cmdCollection[cmd] !== undefined)
         return console.warn(`Command '${cmd}' is already registered. Set overwrite to true, if you need to overwrite the already registered command.`);
     cmdCollection[cmd] = fn;
 };
 
-const noMerge = { '.': true, ',': true };
-const mergeText = (paragraph:Node) : Node => {
+const noMerge = {'.': true, ',': true};
+const mergeText = (paragraph: Node): Node => {
     const textNodes = [];
     const mergedNodes = paragraph.value.reduce((acc, node) => {
         if (node.type === NodeType.Text) {
             if (noMerge[node.value[0]]) {
-                acc.push({ type: NodeType.Text, value: node.value[0] + ' ' });
-                if (node.value.length !== 1) textNodes.push({ type: NodeType.Text, value: node.value.substr(1) });
-            }
-            else textNodes.push(node);
+                acc.push({type: NodeType.Text, value: node.value[0] + ' '});
+                if (node.value.length !== 1) textNodes.push({type: NodeType.Text, value: node.value.substr(1)});
+            } else textNodes.push(node);
         } else {
             if (textNodes.length) {
-                acc.push({ type: NodeType.Text, value: textNodes.map(n => n.value).join(' ') });
+                acc.push({type: NodeType.Text, value: textNodes.map(n => n.value).join(' ')});
                 textNodes.length = 0;
             }
             acc.push(node);
@@ -34,22 +46,25 @@ const mergeText = (paragraph:Node) : Node => {
         return acc;
     }, []);
     if (textNodes.length)
-        mergedNodes.push({ type: NodeType.Text, value: textNodes.map(n => n.value).join(' ') });
-    return { type: paragraph.type, value: mergedNodes };
+        mergedNodes.push({type: NodeType.Text, value: textNodes.map(n => n.value).join(' ')});
+    return {type: paragraph.type, value: mergedNodes};
 };
 
 const truthy = e => !!e;
 
-const flatMap = async (elements:Array<any>, fn:Function) : Promise<Array<any>> => (await map(elements, fn)).flat();
-const flatMapFilter = async (elements:Array<any>, fn:Function) : Promise<Array<any>> => (await map(elements, fn)).flat().filter(truthy);
-const flattenNodes = (nodes:Array<Node>) : Array<Node> => {
+const flatMap = async (elements: Array<any>, fn: Function): Promise<Array<any>> => (await map(elements, fn)).flat();
+const flatMapFilter = async (elements: Array<any>, fn: Function): Promise<Array<any>> => (await map(elements, fn)).flat().filter(truthy);
+const flattenNodes = (nodes: Array<Node>): Array<Node> => {
     let cleanParagraph;
     let requiresNew = true;
 
     return nodes.reduce((flattened, current) => {
         if (current.type === NodeType.Paragraph) requiresNew = flattened.push(...flattenNodes(current.value)) && true;
         else {
-            if (requiresNew) requiresNew = flattened.push(cleanParagraph = {type: NodeType.Paragraph, value: []}) && false;
+            if (requiresNew) requiresNew = flattened.push(cleanParagraph = {
+                type: NodeType.Paragraph,
+                value: []
+            }) && false;
             cleanParagraph.value.push(current);
         }
         return flattened;
@@ -57,31 +72,39 @@ const flattenNodes = (nodes:Array<Node>) : Array<Node> => {
 };
 
 class Nxtx implements INxtx {
-    private hooks = { prerender: new Array<Function>(), postrender: new Array<Function>() };
+    private hooks = {
+        prerender: new Array<Function>(),
+        midrender: new Array<Function>(),
+        postrender: new Array<Function>()
+    };
     private registeredPackages = new Array<string>();
-    private commands : { [key:string]:CommandFunction } = {};
-    private preprocessors : { [key:string]:CommandFunction } = {};
+    private commands: { [key: string]: CommandFunction } = {};
+    private preprocessors: { [key: string]: CommandFunction } = {};
 
-    public registerCommand(cmd:string, fn:CommandFunction, overwrite?:boolean) : void {
+    private static trigger(subscribers: Function[]): void {
+        return subscribers.forEach(fn => fn());
+    }
+
+    public registerCommand(cmd: string, fn: CommandFunction, overwrite?: boolean): void {
         return register(this.commands, cmd, fn, overwrite);
     }
 
-    public registerPreprocessor(cmd:string, fn:CommandFunction, overwrite?:boolean) : void {
+    public registerPreprocessor(cmd: string, fn: CommandFunction, overwrite?: boolean): void {
         return register(this.preprocessors, cmd, fn, overwrite);
     }
 
-    public verifyArguments(types:Array<NodeType>, ...args:Array<Node>) : ArgumentCheckResult {
+    public verifyArguments(types: Array<NodeType>, ...args: Array<Node>): ArgumentCheckResult {
         const invalidArguments = args
             .map((node, index) => ({expected: types[index], actual: node.type, index}))
             .filter(type => type.expected !== type.actual);
         return {ok: invalidArguments.length === 0, invalid: invalidArguments}
     }
 
-    public parse(text:string) : Array<Node> {
+    public parse(text: string): Array<Node> {
         return parser.parse(text).map(mergeText);
     }
 
-    public registerPackage(pkg:Package) : void {
+    public registerPackage(pkg: Package): void {
         if (pkg.commands) {
             Object.keys(pkg.commands).forEach(name => this.registerCommand(name, pkg.commands[name]));
         }
@@ -104,11 +127,15 @@ class Nxtx implements INxtx {
         this.registeredPackages.push(pkg.name);
     }
 
-    public async render(code:string, root:HTMLElement) : Promise<void> {
+    public async render(code: string, root: HTMLElement): Promise<void> {
         while (root.firstChild) root.removeChild(root.firstChild);
         let page = 0, currentPage: HTMLElement;
         const newPage = () => {
-            root.appendChild(currentPage = this.htmlLite('section', {id: `page-${++page}`, class: 'sheet', 'data-page': page}));
+            root.appendChild(currentPage = this.htmlLite('section', {
+                id: `page-${++page}`,
+                class: 'sheet',
+                'data-page': page
+            }));
             currentPage.appendChild(this.htmlLite('div', {class: 'meta page-start'}));
         };
         newPage();
@@ -122,39 +149,36 @@ class Nxtx implements INxtx {
         Nxtx.trigger(this.hooks.prerender);
         let paragraphs = this.parse(code).map(mergeText);
         const preprocessed = await this.executePreprocessors(paragraphs);
+        Nxtx.trigger(this.hooks.midrender);
         const rendered = await mapSeries(preprocessed, async (node: Node) => await this.baseRenderNode(node));
         rendered.forEach(nodes => nodes.forEach(place));
         Nxtx.trigger(this.hooks.postrender);
     }
 
-    public text(content:string) {
+    public text(content: string) {
         return document.createTextNode(content);
     }
 
-    public htmlLite(nodeName:string, attributes:object, ...children:Array<HTMLElement|string>) : HTMLElement{
+    public htmlLite(nodeName: string, attributes: object, ...children: Array<HTMLElement | string>): HTMLElement {
         let n = document.createElement(nodeName);
         Object.keys(attributes || {}).forEach(k => n.setAttribute(k, attributes[k]));
         children.forEach(c => typeof c === "string" ? n.appendChild(this.text(c)) : n.appendChild(c));
         return n;
     }
 
-    public async html(nodeName:string, attributes:{[key:string]:any}, ...children:Array<Promise<HTMLElement|Node|string>|HTMLElement|Node|string>) : Promise<HTMLElement> {
+    public async html(nodeName: string, attributes: { [key: string]: any }, ...children: Array<Promise<HTMLElement | Node | string> | HTMLElement | Node | string>): Promise<HTMLElement> {
         const n = this.htmlLite(nodeName, attributes);
         for (let i = 0; i < children.length; i++) n.appendChild(await this.baseRenderNode(children[i]));
         return n;
     }
 
-    public on(event:string, handler:()=>void) : void {
+    public on(event: RenderEvent, handler: () => void): void {
         if (!this.hooks[event].includes(handler)) this.hooks[event].push(handler);
     }
 
-    public off(event:string, handler:()=>void) : void {
+    public off(event: RenderEvent, handler: () => void): void {
         const index = this.hooks[event].indexOf(handler);
         if (index !== -1) this.hooks[event].splice(index, 1);
-    }
-
-    private static trigger(subscribers: Function[]) : void {
-        return subscribers.forEach(fn => fn());
     }
 
     private baseRenderNode = async (node: Node | string | any) => {
@@ -175,10 +199,10 @@ class Nxtx implements INxtx {
                 const result = [await this.executeCommand(node.name, node.args)].flat().filter(truthy);
                 return await flatMap(result, this.baseRenderNode)
         }
-        console.error(node);
+        console.error('Unrecognized node', node);
     };
 
-    private executeCommand = async (cmd:string, args:Array<Node>): Promise<CommandResult> => {
+    private executeCommand = async (cmd: string, args: Array<Node>): Promise<CommandResult> => {
         if (this.commands[cmd] !== undefined)
             return await this.commands[cmd](...(await map(args, arg => arg.type === NodeType.Command ? this.executeCommand(arg.name, arg.args) : arg)));
         console.warn(`Command '${cmd}' not registered`);
@@ -197,7 +221,7 @@ class Nxtx implements INxtx {
     };
 
     private executePreprocessors = async (paragraphs: Array<Node>): Promise<void> => await reduce(paragraphs, async (processed, current) => {
-        const preprocessed = await flatMapFilter(current.value, this.executePreprocessor.bind(this));
+        const preprocessed = await flatMapFilter(current.value, this.executePreprocessor);
         processed.push(...flattenNodes(preprocessed));
         return processed;
     }, []);

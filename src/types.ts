@@ -37,8 +37,10 @@ export interface Package {
     requires?: Array<string>,
     commands?: { [name:string]: CommandFunction },
     preprocessors?: { [name:string]: CommandFunction },
-    hooks?: { prerender?:()=>void, postrender?:()=>void }
+    hooks?: { prerender?:()=>void, midrender?:()=>void, postrender?:()=>void }
 }
+
+export type RenderEvent = 'prerender'|'midrender'|'postrender'
 
 export interface INxtx {
     registerCommand: (cmd:string, fn:CommandFunction, overwrite?:boolean) => void
@@ -53,6 +55,6 @@ export interface INxtx {
     htmlLite: (nodeName:string, attributes:object, ...children:Array<HTMLElement|string>) => HTMLElement
     html: (nodeName:string, attributes:object, ...children:Array<Promise<HTMLElement|Node|string>|HTMLElement|Node|string>) => Promise<HTMLElement>
 
-    on: (event:string, handler:()=>void) => void
-    off: (event:string, handler:()=>void) => void
+    on: (event:RenderEvent, handler:()=>void) => void
+    off: (event:RenderEvent, handler:()=>void) => void
 }
