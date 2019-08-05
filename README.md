@@ -10,7 +10,20 @@ I have enjoyed using LaTeX because of it's plain-text approach as opposed the WY
 But when you need to create a document collaboratively with fellow students or co-workers, something more geared towards "real-time" collaboration is needed. 
 There exists solutions that enable collaborative LaTeX work to be done "real-time" in a browser, but compiling the LaTeX content often takes a long time, from my experience writing reports at the university. Furthermore, as these solutions rely on server-side rendering of the documents, compilation gets much slower when using these solutions when many other users are compiling their documents at the same time. This always became very annoying around the time of exams, as all students at the institute used the same online solution. As did many other students world-wide and this resulted in compile-times of several minutes which completely ruined productivity. 
 
-NxTx eliminates all the issues mentioned above by being completely browser-based. All parsing and rendering is done at the client-side, directly in the browser. NxTx and it's package-system is designed for the browser. Nxtx (currently) doesn't include a server for synchronizing the edited files. It is easy to create packages for Nxtx in either JavaScript and TypeScript, and the packages can be loaded from any static file host making it easy to distribute trough GitHub Pages or CDNs.
+NxTx eliminates all the issues mentioned above by being completely browser-based. 
+All parsing and rendering is done at the client-side, directly in the browser. 
+NxTx and it's package-system is designed for the browser. 
+Nxtx (currently) doesn't include a server for synchronizing the edited files. 
+It is easy to create packages for Nxtx in either JavaScript and TypeScript, and the packages can be loaded from any static file host making it easy to distribute trough GitHub Pages or CDNs.
+
+#### Goals
+- Parser and renderer runs directly in the browser without any server
+- Exactly the same layout of DOM elements as when printing to PDF
+- Fully web-based. No part of the pipeline, from parsing to viewing, may require anything other than a modern browser.
+    - Packages
+
+#### Non-goals
+- LaTeX compatibility
 
 <br/>
 

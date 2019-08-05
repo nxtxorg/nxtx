@@ -11,6 +11,8 @@ export enum NodeType {
     Block,
     Html,
     Node,
+
+    Boolean = 10,
     Dictionary = 11,
     Array,
     Number,

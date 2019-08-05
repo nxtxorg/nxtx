@@ -18,7 +18,7 @@ import {
     NodeType,
     Package,
     RenderEvent
-} from "./types";
+} from "./nxtx-interface";
 
 
 const register = (cmdCollection: object, cmd: string, fn: CommandFunction, overwrite: boolean = false): void => {
