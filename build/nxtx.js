@@ -2278,6 +2278,29 @@
                 .filter(function (type) { return type.expected !== type.actual; });
             return { ok: invalidArguments.length === 0, invalid: invalidArguments };
         };
+        Nxtx.prototype.jsArguments = function () {
+            var nodeArg = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                nodeArg[_i] = arguments[_i];
+            }
+            return nodeArg.map(this.jsArgument);
+        };
+        Nxtx.prototype.jsArgument = function (nodeArg) {
+            var _this = this;
+            switch (nodeArg.type) {
+                case NodeType.Number:
+                case NodeType.String:
+                case NodeType.Boolean:
+                    return nodeArg.value;
+                case NodeType.Array:
+                    return nodeArg.value.map(this.jsArgument);
+                case NodeType.Dictionary:
+                    return Object.keys(nodeArg.value).reduce(function (acc, key) {
+                        acc[key] = _this.jsArgument(nodeArg.value[key]);
+                        return acc;
+                    }, {});
+            }
+        };
         Nxtx.prototype.parse = function (text) {
             return parser$1.parse(text).map(mergeText);
         };

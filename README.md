@@ -90,7 +90,7 @@ or in inline form:
 
 So an invocation could look like this: 
 ```
-\bib-add(nxtx, {
+\bib:add(nxtx, {
     author: 'Malte Rosenbjerg'
     title: 'NxTx'
     year: 2019

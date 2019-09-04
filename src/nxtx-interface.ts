@@ -48,6 +48,8 @@ export interface INxtx {
     registerCommand: (cmd:string, fn:CommandFunction, overwrite?:boolean) => void
     registerPreprocessor: (cmd:string, fn:CommandFunction, overwrite?:boolean) => void
     verifyArguments: (types:Array<NodeType>, ...args:Array<Node>) => ArgumentCheckResult
+    jsArguments: (...nodeArgs: Array<Node>) => Array<any>
+    jsArgument: (nodeArg: Node) => any
     registerPackage: (pkg:Package) => void
 
     parse: (code:string) => Array<Node>

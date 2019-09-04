@@ -99,6 +99,24 @@ class Nxtx implements INxtx {
             .filter(type => type.expected !== type.actual);
         return {ok: invalidArguments.length === 0, invalid: invalidArguments}
     }
+    public jsArguments(...nodeArg: Array<Node>) : Array<any> {
+        return nodeArg.map(this.jsArgument);
+    }
+    public jsArgument(nodeArg: Node) : any {
+        switch (nodeArg.type) {
+            case NodeType.Number:
+            case NodeType.String:
+            case NodeType.Boolean:
+                return nodeArg.value;
+            case NodeType.Array:
+                return nodeArg.value.map(this.jsArgument);
+            case NodeType.Dictionary:
+                return Object.keys(nodeArg.value).reduce((acc, key) => {
+                    acc[key] = this.jsArgument(nodeArg.value[key]);
+                    return acc;
+                }, {});
+        }
+    }
 
     public parse(text: string): Array<Node> {
         return parser.parse(text).map(mergeText);
