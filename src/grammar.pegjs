@@ -28,11 +28,11 @@ CommandArguments
 ValueChain 'command arguments'
 	= head:Value _ ',' _ NEWLINE? _ tail:ValueChain { return [head, ...tail] }
 	/ head:Value { return [head] }
-Value = Boolean / Dictionary / Array / Command / Name / Number / String
+Value = Boolean / Dictionary / Array / Command / Number / Name / String
 
 Name 'name' = name:CommandName { return { type: TYPE.STRING, value: name } }
 Boolean 'boolean' = ('true' / 'false') { return { type: TYPE.BOOLEAN, value: text() === 'true' } }
-Number 'number' = [0-9]+ float:('.' [0-9]+)? { return { type: TYPE.NUMBER, value: (float ? parseFloat(text()) : parseInt(text(), 10)) } }
+Number 'number' = '-'? [0-9]+ float:('.' [0-9]+)? { return { type: TYPE.NUMBER, value: (float ? parseFloat(text()) : parseInt(text(), 10)) } }
 String 'string'
 	= '"' text:[^"]* '"' { return { type: TYPE.STRING, value: text.join('') } }
 	/ "'" text:[^']* "'" { return { type: TYPE.STRING, value: text.join('') } }
