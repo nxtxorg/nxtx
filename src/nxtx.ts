@@ -78,7 +78,7 @@ const jsArgument = (nodeArg: Node) => {
         case NodeType.Boolean:
             return nodeArg.value;
         case NodeType.Array:
-            return nodeArg.value.map(this.jsArgument);
+            return nodeArg.value.map(jsArgument);
         case NodeType.Dictionary:
             return Object.keys(nodeArg.value).reduce((acc, key) => {
                 acc[key] = jsArgument(nodeArg.value[key]);

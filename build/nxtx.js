@@ -2181,7 +2181,7 @@
             case NodeType.Boolean:
                 return nodeArg.value;
             case NodeType.Array:
-                return nodeArg.value.map(_this.jsArgument);
+                return nodeArg.value.map(jsArgument);
             case NodeType.Dictionary:
                 return Object.keys(nodeArg.value).reduce(function (acc, key) {
                     acc[key] = jsArgument(nodeArg.value[key]);
