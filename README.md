@@ -29,7 +29,7 @@ It is easy to create packages for Nxtx in either JavaScript and TypeScript, and 
 
 The base (parser & renderer) is minimal and designed to be extended through packages written in TypeScript (see build/libs)
 
-- The parser is built using [PEG.js](https://github.com/pegjs/pegjs) and the grammar is currently quite tiny (~50 lines)
+- The parser is built using [PEG.js](https://github.com/pegjs/pegjs) and the [grammar](https://github.com/nxtxorg/nxtx/blob/master/src/grammar.pegjs) is currently quite tiny (~50 lines)
 - The renderer is implemented in TypeScript and relies on DOM elements
   - [paper-css](https://github.com/cognitom/paper-css) classes are used and is relied on for basic styling
   
