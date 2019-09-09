@@ -6,7 +6,7 @@ export interface Node {
 }
 export enum NodeType {
     Paragraph = 1,
-    Command,
+    Invocation,
     Text,
     Block,
     Html,

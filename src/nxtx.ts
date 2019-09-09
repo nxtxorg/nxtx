@@ -217,7 +217,7 @@ class Nxtx implements INxtx {
                 return this.htmlLite('span', {innerHTML: node.value});
             case NodeType.Text:
                 return document.createTextNode(node.value);
-            case NodeType.Command:
+            case NodeType.Invocation:
                 const result = [await this.executeCommand(node.name, node.args)].flat().filter(truthy);
                 return await flatMap(result, this.baseRenderNode)
         }
@@ -227,10 +227,11 @@ class Nxtx implements INxtx {
     private executeCommand = async (cmd: string, args: Array<Node>): Promise<CommandResult> => {
         if (this.commands[cmd] !== undefined){
             try {
-                return await this.commands[cmd](...(await map(args, arg => arg.type === NodeType.Command ? this.executeCommand(arg.name, arg.args) : arg)));
+                return await this.commands[cmd](...(await map(args, arg => arg.type === NodeType.Invocation ? this.executeCommand(arg.name, arg.args) : arg)));
             }
             catch (e) {
-                return await this.html('b', {class: "error"}, `commmand ${cmd}?!`);
+                console.error(`commmand ${cmd} threw error`, e);
+                return await this.html('b', {class: "error"}, `commmand ${cmd} threw error`);
             }
         }
         console.warn(`Command '${cmd}' not registered`);
@@ -239,7 +240,7 @@ class Nxtx implements INxtx {
 
     private executePreprocessor = async (node: Node): Promise<CommandResult | Node> => {
         try {
-            if (node.type === NodeType.Command && this.preprocessors[node.name]) {
+            if (node.type === NodeType.Invocation && this.preprocessors[node.name]) {
                 const result = [await this.preprocessors[node.name](...node.args)].flat().filter(truthy);
                 const childResults = await flatMap(result, this.executePreprocessor);
                 if (this.commands[node.name] === undefined) return childResults;
@@ -249,7 +250,8 @@ class Nxtx implements INxtx {
             return node;
         }
         catch (e) {
-            return await this.html('b', {class: "error"}, `preprocessor ${node.name}?!`);
+            console.error(`preprocessor ${node.name} threw error`, e);
+            return await this.html('b', {class: "error"}, `preprocessor ${node.name} threw error`);
         }
     };
 

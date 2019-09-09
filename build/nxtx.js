@@ -213,7 +213,7 @@
             peg$c12 = peg$otherExpectation("command"),
             peg$c13 = "\\",
             peg$c14 = peg$literalExpectation("\\", false),
-            peg$c15 = function(name, args) { return { type: TYPE.COMMAND, name, args: args || [] } },
+            peg$c15 = function(name, args) { return { type: TYPE.INVOCATION, name, args: args || [] } },
             peg$c16 = peg$otherExpectation("command name"),
             peg$c17 = /^[_:\-]/,
             peg$c18 = peg$classExpectation(["_", ":", "-"], false, false),
@@ -1814,7 +1814,7 @@
         }
 
 
-            const TYPE = { PARAGRAPH: 1, COMMAND: 2, TEXT: 3, BOOLEAN: 10, DICTIONARY: 11, ARRAY: 12, NUMBER: 13, STRING: 14 };
+            const TYPE = { PARAGRAPH: 1, INVOCATION: 2, TEXT: 3, BOOLEAN: 10, DICTIONARY: 11, ARRAY: 12, NUMBER: 13, STRING: 14 };
 
 
         peg$result = peg$startRuleFunction();
@@ -2098,7 +2098,7 @@
     var NodeType;
     (function (NodeType) {
         NodeType[NodeType["Paragraph"] = 1] = "Paragraph";
-        NodeType[NodeType["Command"] = 2] = "Command";
+        NodeType[NodeType["Invocation"] = 2] = "Invocation";
         NodeType[NodeType["Text"] = 3] = "Text";
         NodeType[NodeType["Block"] = 4] = "Block";
         NodeType[NodeType["Html"] = 5] = "Html";
@@ -2215,7 +2215,7 @@
                                 case NodeType.Paragraph: return [3, 2];
                                 case NodeType.Html: return [3, 4];
                                 case NodeType.Text: return [3, 5];
-                                case NodeType.Command: return [3, 6];
+                                case NodeType.Invocation: return [3, 6];
                             }
                             return [3, 9];
                         case 1: return [2, node];
@@ -2251,12 +2251,13 @@
                             _e.trys.push([1, 4, , 6]);
                             _b = (_a = (_d = this.commands)[cmd]).apply;
                             _c = [_d];
-                            return [4, map(args, function (arg) { return arg.type === NodeType.Command ? _this.executeCommand(arg.name, arg.args) : arg; })];
+                            return [4, map(args, function (arg) { return arg.type === NodeType.Invocation ? _this.executeCommand(arg.name, arg.args) : arg; })];
                         case 2: return [4, _b.apply(_a, _c.concat([(_e.sent())]))];
                         case 3: return [2, _e.sent()];
                         case 4:
                             e_1 = _e.sent();
-                            return [4, this.html('b', { class: "error" }, "commmand " + cmd + "?!")];
+                            console.error("commmand " + cmd + " threw error", e_1);
+                            return [4, this.html('b', { class: "error" }, "commmand " + cmd + " threw error")];
                         case 5: return [2, _e.sent()];
                         case 6:
                             console.warn("Command '" + cmd + "' not registered");
@@ -2272,7 +2273,7 @@
                     switch (_c.label) {
                         case 0:
                             _c.trys.push([0, 6, , 8]);
-                            if (!(node.type === NodeType.Command && this.preprocessors[node.name])) return [3, 3];
+                            if (!(node.type === NodeType.Invocation && this.preprocessors[node.name])) return [3, 3];
                             return [4, (_b = this.preprocessors)[node.name].apply(_b, node.args)];
                         case 1:
                             result = [_c.sent()].flat().filter(truthy);
@@ -2292,7 +2293,8 @@
                         case 5: return [2, node];
                         case 6:
                             e_2 = _c.sent();
-                            return [4, this.html('b', { class: "error" }, "preprocessor " + node.name + "?!")];
+                            console.error("preprocessor " + node.name + " threw error", e_2);
+                            return [4, this.html('b', { class: "error" }, "preprocessor " + node.name + " threw error")];
                         case 7: return [2, _c.sent()];
                         case 8: return [2];
                     }
