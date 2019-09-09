@@ -2174,6 +2174,21 @@
             return flattened;
         }, []).flat();
     };
+    var jsArgument = function (nodeArg) {
+        switch (nodeArg.type) {
+            case NodeType.Number:
+            case NodeType.String:
+            case NodeType.Boolean:
+                return nodeArg.value;
+            case NodeType.Array:
+                return nodeArg.value.map(_this.jsArgument);
+            case NodeType.Dictionary:
+                return Object.keys(nodeArg.value).reduce(function (acc, key) {
+                    acc[key] = jsArgument(nodeArg.value[key]);
+                    return acc;
+                }, {});
+        }
+    };
     var Nxtx = (function () {
         function Nxtx() {
             var _this = this;
@@ -2315,23 +2330,10 @@
             for (var _i = 0; _i < arguments.length; _i++) {
                 nodeArg[_i] = arguments[_i];
             }
-            return nodeArg.map(this.jsArgument);
+            return nodeArg.map(jsArgument);
         };
         Nxtx.prototype.jsArgument = function (nodeArg) {
-            var _this = this;
-            switch (nodeArg.type) {
-                case NodeType.Number:
-                case NodeType.String:
-                case NodeType.Boolean:
-                    return nodeArg.value;
-                case NodeType.Array:
-                    return nodeArg.value.map(this.jsArgument);
-                case NodeType.Dictionary:
-                    return Object.keys(nodeArg.value).reduce(function (acc, key) {
-                        acc[key] = _this.jsArgument(nodeArg.value[key]);
-                        return acc;
-                    }, {});
-            }
+            return jsArgument(nodeArg);
         };
         Nxtx.prototype.parse = function (text) {
             return parser$1.parse(text).map(mergeText);

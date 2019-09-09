@@ -71,6 +71,22 @@ const flattenNodes = (nodes: Array<Node>): Array<Node> => {
     }, []).flat();
 };
 
+const jsArgument = (nodeArg: Node) => {
+    switch (nodeArg.type) {
+        case NodeType.Number:
+        case NodeType.String:
+        case NodeType.Boolean:
+            return nodeArg.value;
+        case NodeType.Array:
+            return nodeArg.value.map(this.jsArgument);
+        case NodeType.Dictionary:
+            return Object.keys(nodeArg.value).reduce((acc, key) => {
+                acc[key] = jsArgument(nodeArg.value[key]);
+                return acc;
+            }, {});
+    }
+};
+
 class Nxtx implements INxtx {
     private hooks = {
         prerender: new Array<Function>(),
@@ -100,22 +116,10 @@ class Nxtx implements INxtx {
         return {ok: invalidArguments.length === 0, invalid: invalidArguments}
     }
     public jsArguments(...nodeArg: Array<Node>) : Array<any> {
-        return nodeArg.map(this.jsArgument);
+        return nodeArg.map(jsArgument);
     }
     public jsArgument(nodeArg: Node) : any {
-        switch (nodeArg.type) {
-            case NodeType.Number:
-            case NodeType.String:
-            case NodeType.Boolean:
-                return nodeArg.value;
-            case NodeType.Array:
-                return nodeArg.value.map(this.jsArgument);
-            case NodeType.Dictionary:
-                return Object.keys(nodeArg.value).reduce((acc, key) => {
-                    acc[key] = this.jsArgument(nodeArg.value[key]);
-                    return acc;
-                }, {});
-        }
+        return jsArgument(nodeArg);
     }
 
     public parse(text: string): Array<Node> {
