@@ -2239,31 +2239,39 @@
                 });
             }); };
             this.executeCommand = function (cmd, args) { return __awaiter(_this, void 0, void 0, function () {
-                var _a, _b, _c;
+                var _a, _b, _c, e_1;
                 var _d;
                 var _this = this;
                 return __generator(this, function (_e) {
                     switch (_e.label) {
                         case 0:
-                            if (!(this.commands[cmd] !== undefined)) return [3, 3];
+                            if (!(this.commands[cmd] !== undefined)) return [3, 6];
+                            _e.label = 1;
+                        case 1:
+                            _e.trys.push([1, 4, , 6]);
                             _b = (_a = (_d = this.commands)[cmd]).apply;
                             _c = [_d];
                             return [4, map(args, function (arg) { return arg.type === NodeType.Command ? _this.executeCommand(arg.name, arg.args) : arg; })];
-                        case 1: return [4, _b.apply(_a, _c.concat([(_e.sent())]))];
-                        case 2: return [2, _e.sent()];
-                        case 3:
+                        case 2: return [4, _b.apply(_a, _c.concat([(_e.sent())]))];
+                        case 3: return [2, _e.sent()];
+                        case 4:
+                            e_1 = _e.sent();
+                            return [4, this.html('b', { class: "error" }, "commmand " + cmd + "?!")];
+                        case 5: return [2, _e.sent()];
+                        case 6:
                             console.warn("Command '" + cmd + "' not registered");
                             return [4, this.html('b', { class: "error" }, cmd + "?")];
-                        case 4: return [2, _e.sent()];
+                        case 7: return [2, _e.sent()];
                     }
                 });
             }); };
             this.executePreprocessor = function (node) { return __awaiter(_this, void 0, void 0, function () {
-                var result, childResults, _a;
+                var result, childResults, _a, e_2;
                 var _b;
                 return __generator(this, function (_c) {
                     switch (_c.label) {
                         case 0:
+                            _c.trys.push([0, 6, , 8]);
                             if (!(node.type === NodeType.Command && this.preprocessors[node.name])) return [3, 3];
                             return [4, (_b = this.preprocessors)[node.name].apply(_b, node.args)];
                         case 1:
@@ -2282,6 +2290,11 @@
                             _a.value = _c.sent();
                             _c.label = 5;
                         case 5: return [2, node];
+                        case 6:
+                            e_2 = _c.sent();
+                            return [4, this.html('b', { class: "error" }, "preprocessor " + node.name + "?!")];
+                        case 7: return [2, _c.sent()];
+                        case 8: return [2];
                     }
                 });
             }); };

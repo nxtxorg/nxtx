@@ -225,21 +225,32 @@ class Nxtx implements INxtx {
     };
 
     private executeCommand = async (cmd: string, args: Array<Node>): Promise<CommandResult> => {
-        if (this.commands[cmd] !== undefined)
-            return await this.commands[cmd](...(await map(args, arg => arg.type === NodeType.Command ? this.executeCommand(arg.name, arg.args) : arg)));
+        if (this.commands[cmd] !== undefined){
+            try {
+                return await this.commands[cmd](...(await map(args, arg => arg.type === NodeType.Command ? this.executeCommand(arg.name, arg.args) : arg)));
+            }
+            catch (e) {
+                return await this.html('b', {class: "error"}, `commmand ${cmd}?!`);
+            }
+        }
         console.warn(`Command '${cmd}' not registered`);
         return await this.html('b', {class: "error"}, `${cmd}?`);
     };
 
     private executePreprocessor = async (node: Node): Promise<CommandResult | Node> => {
-        if (node.type === NodeType.Command && this.preprocessors[node.name]) {
-            const result = [await this.preprocessors[node.name](...node.args)].flat().filter(truthy);
-            const childResults = await flatMap(result, this.executePreprocessor);
-            if (this.commands[node.name] === undefined) return childResults;
-        } else if (node.type === NodeType.Paragraph) {
-            node.value = await flatMapFilter(node.value, this.executePreprocessor);
+        try {
+            if (node.type === NodeType.Command && this.preprocessors[node.name]) {
+                const result = [await this.preprocessors[node.name](...node.args)].flat().filter(truthy);
+                const childResults = await flatMap(result, this.executePreprocessor);
+                if (this.commands[node.name] === undefined) return childResults;
+            } else if (node.type === NodeType.Paragraph) {
+                node.value = await flatMapFilter(node.value, this.executePreprocessor);
+            }
+            return node;
         }
-        return node;
+        catch (e) {
+            return await this.html('b', {class: "error"}, `preprocessor ${node.name}?!`);
+        }
     };
 
     private executePreprocessors = async (paragraphs: Array<Node>): Promise<void> => await reduce(paragraphs, async (processed, current) => {
