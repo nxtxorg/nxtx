@@ -44,7 +44,7 @@ Dictionary 'dictionary'
 	= '{' _ NEWLINE? _ pairs:KeyValuePairs _ NEWLINE? _ '}' { return { type: TYPE.DICTIONARY, value: pairs.reduce((acc, e) => (acc[e.name] = e.value) && acc, {}) } }
 	/ '{' _ '}' { return { type: TYPE.DICTIONARY, value: {} } }
 KeyValuePairs 'key-value pair(s)'
-	= head:KeyValuePair _ NEWLINE _ tail:KeyValuePairs { return [head, ...tail] }
+	= head:KeyValuePair _ ','? NEWLINE _ tail:KeyValuePairs { return [head, ...tail] }
 	/ head:KeyValuePair _ ',' _ tail:KeyValuePairs { return [head, ...tail] }
     / head:KeyValuePair { return [head] }
 KeyValuePair 'key-value pair'
