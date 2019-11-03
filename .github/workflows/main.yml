@@ -19,7 +19,7 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
       -
         name: Install dependencies
-        run: yarn install
+        run: yarn install --ignore-scripts
       -
         name: Build unminified
         run: yarn build:dev
