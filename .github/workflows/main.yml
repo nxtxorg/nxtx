@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: '10.x'
           registry-url: 'https://npm.pkg.github.com'
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Install dependencies
         run: yarn install --ignore-scripts
@@ -28,7 +29,4 @@ jobs:
         run: yarn build
       -
         name: Publish package
-        env:
-          registry-url: 'https://npm.pkg.github.com'
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn publish
