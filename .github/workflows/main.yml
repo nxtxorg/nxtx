@@ -31,3 +31,4 @@ jobs:
         env:
           registry-url: 'https://npm.pkg.github.com'
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_PACKAGE_PUBLISH_TOKEN }}
+        run: yarn publish
