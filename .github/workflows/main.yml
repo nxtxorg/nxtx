@@ -19,13 +19,13 @@ jobs:
           node-version: '10.x'
       -
         name: Install dependencies
-        run: npm install --ignore-scripts
+        run: yarn install --ignore-scripts
       -
         name: Build unminified
-        run: npm run build:dev
+        run: yarn build:dev
       -
         name: Build minified
-        run: npm run build
+        run: yarn build
       -
         name: Publish package
         env:
