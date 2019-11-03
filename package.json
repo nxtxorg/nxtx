@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "rollup --config rollup.config.js --environment NODE_ENV:production",
+    "build:dev": "rollup --config rollup.config.js --environment NODE_ENV:development",
     "dev": "rollup --watch --config rollup.config.js --environment NODE_ENV:development"
   },
   "dependencies": {
