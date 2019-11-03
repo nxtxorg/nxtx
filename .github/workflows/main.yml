@@ -15,6 +15,7 @@ jobs:
         name: Setup Node.js
         uses: actions/setup-node@v1
         with:
+          registry-url: 'https://npm.pkg.github.com'
           node-version: '10.x'
       -
         name: Install dependencies
@@ -28,6 +29,5 @@ jobs:
       -
         name: Publish package
         env:
-          registry-url: 'https://npm.pkg.github.com'
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn publish
