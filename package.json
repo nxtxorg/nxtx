@@ -12,7 +12,7 @@
     "build/nxtx.js",
     "build/nxtx.js.map",
     "build/nxtx.min.js",
-    "build/nxtx.min.js.map",
+    "build/nxtx.min.js.map"
   ],
   "devDependencies": {
     "@types/pegjs": "^0.10.1",
