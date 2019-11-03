@@ -1,3 +1,5 @@
+name: Build nxtx package and publish
+
 on:
   pull_request:
     branches: release
