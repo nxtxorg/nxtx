@@ -7,8 +7,8 @@
   "files": [
     "src/nxtx.ts",
     "src/parser.js",
-    "src/nxtx-interface.ts",
     "src/grammar.pegjs",
+    "src/nxtx-interface.ts",
     "build/nxtx.js",
     "build/nxtx.js.map",
     "build/nxtx.min.js",
