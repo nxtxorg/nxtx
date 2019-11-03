@@ -19,15 +19,15 @@ jobs:
           node-version: '10.x'
       -
         name: Install dependencies
-        run: yarn install --ignore-scripts
+        run: npm install --ignore-scripts
       -
         name: Build unminified
-        run: yarn build:dev
+        run: npm run build:dev
       -
         name: Build minified
-        run: yarn build
+        run: npm run build
       -
         name: Publish package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: yarn publish
+        run: npm publish
