@@ -27,4 +27,4 @@ jobs:
         run: yarn build
       -
         name: Publish package
-        run: npm config set registry https://npm.pkg.github.com/nxtxorg/:_authToken=${{ secrets.GITHUB_TOKEN }} && npm publish
+        run: npm config set registry https://npm.pkg.github.com/nxtxorg:_authToken=${{ secrets.GITHUB_TOKEN }} && npm publish
