@@ -4,6 +4,9 @@
   "description": "a browser-friendly LaTex-inspired document preparation system",
   "author": "Malte Rosenbjerg",
   "license": "MIT",
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com/nxtxorg"
+  },
   "files": [
     "src/nxtx.ts",
     "src/parser.js",
