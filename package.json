@@ -4,15 +4,18 @@
   "description": "a browser-friendly LaTex-inspired document preparation system",
   "author": "Malte Rosenbjerg",
   "license": "MIT",
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com/nxtxorg"
+  },
   "files": [
     "src/nxtx.ts",
     "src/parser.js",
-    "src/nxtx-interface.ts",
     "src/grammar.pegjs",
+    "src/nxtx-interface.ts",
     "build/nxtx.js",
     "build/nxtx.js.map",
     "build/nxtx.min.js",
-    "build/nxtx.min.js.map",
+    "build/nxtx.min.js.map"
   ],
   "devDependencies": {
     "@types/pegjs": "^0.10.1",

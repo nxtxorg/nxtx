@@ -1,3 +1,5 @@
+name: Build nxtx package and publish
+
 on:
   pull_request:
     branches: release
@@ -6,14 +8,23 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
-      with:
-        node-version: '10.x'
-        registry-url: 'https://npm.pkg.github.com'
-    - run: yarn install
-    - run: yarn build:dev
-    - run: yarn build
-    - run: yarn publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_PACKAGE_PUBLISH_TOKEN }}
+      -
+        name: Checkout
+        uses: actions/checkout@v1
+      -
+        name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+      -
+        name: Install dependencies
+        run: yarn install --ignore-scripts
+      -
+        name: Build unminified
+        run: yarn build:dev
+      -
+        name: Build minified
+        run: yarn build
+      -
+        name: Publish package
+        run: npm config set registry https://npm.pkg.github.com/nxtxorg:_authToken=${{ secrets.GITHUB_TOKEN }} && npm publish
