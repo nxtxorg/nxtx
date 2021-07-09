@@ -33,10 +33,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.0.8.tgz#551466be11b2adc3f3d47156758f610bd9f6b1d8"
   integrity sha512-b8bbUOTwzIY3V5vDTY1fIJ+ePKDUBqt2hC2woVGotdQQhG/2Sh62HOKHrT7ab+VerXAcPyAiTEipPu/FsreUtg==
 
-"@types/pegjs@^0.10.1":
-  version "0.10.1"
-  resolved "https://registry.yarnpkg.com/@types/pegjs/-/pegjs-0.10.1.tgz#9a2f3961dc62430fdb21061eb0ddbd890f9e3b94"
-  integrity sha512-ra8IchO9odGQmYKbm+94K58UyKCEKdZh9y0vxhG4pIpOJOBlC1C+ZtBVr6jLs+/oJ4pl+1p/4t3JtBA8J10Vvw==
+"@types/pegjs@^0.10.3":
+  version "0.10.3"
+  resolved "https://registry.yarnpkg.com/@types/pegjs/-/pegjs-0.10.3.tgz#9e254036c6bf2254cd98caec447a1d79b6607bff"
+  integrity sha512-C/ZkUNe7HONOaDHXfNTZOUzrOvOgrWdrJj1JZ3QTEPi5gOIygcjCpXyxpdJTKVvWFzbobajRbMbQY8d0WrZ6fg==
 
 "@types/resolve@0.0.8":
   version "0.0.8"
@@ -790,7 +790,7 @@ path-parse@^1.0.6:
 
 pegjs@^0.10.0:
   version "0.10.0"
-  resolved "http://registry.npmjs.org/pegjs/-/pegjs-0.10.0.tgz#cf8bafae6eddff4b5a7efb185269eaaf4610ddbd"
+  resolved "https://registry.npmjs.org/pegjs/-/pegjs-0.10.0.tgz#cf8bafae6eddff4b5a7efb185269eaaf4610ddbd"
 
 posix-character-classes@^0.1.0:
   version "0.1.1"
